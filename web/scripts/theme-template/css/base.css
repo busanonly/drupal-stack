@@ -1,0 +1,122 @@
+/* =====================================================================
+ *  base.css — theme __THEME__ (kosongan)
+ *  Isinya contoh minimal: variabel, reset ringan, dan layout dasar yang
+ *  cocok dengan class di templates/page.html.twig. Silakan diganti.
+ *
+ *  Catatan: core secara otomatis memuat library `system/base` yang berisi
+ *  .visually-hidden, .focusable, dsb — jadi tidak diduplikasi di sini.
+ * ===================================================================== */
+
+/* --- variabel desain --- */
+:root {
+  --color-text: #222;
+  --color-bg: #fff;
+  --color-accent: #0b5fff;
+  --color-muted: #f4f4f4;
+  --color-border: #ddd;
+  --font-base: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --space: 1rem;
+  --max-width: 1200px;
+}
+
+/* --- reset ringan --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-base);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+}
+
+/* --- layout --- */
+.layout-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space);
+}
+
+.site-header,
+.site-nav,
+.site-breadcrumb,
+.site-highlighted,
+.site-help,
+.site-footer {
+  padding: var(--space) 0;
+}
+
+.site-header,
+.site-footer {
+  border-color: var(--color-border);
+}
+
+.site-header {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  margin-top: calc(var(--space) * 2);
+}
+
+.site-highlighted {
+  background: var(--color-muted);
+}
+
+.layout-main {
+  padding: var(--space) 0;
+}
+
+/* --- main + sidebar (aktif hanya bila region sidebar_first terisi) --- */
+.layout-main.has-sidebar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: calc(var(--space) * 2);
+}
+
+@media (max-width: 800px) {
+  .layout-main.has-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- elemen umum --- */
+.page-title {
+  margin-top: 0;
+}
+
+.page-tabs ul {
+  display: flex;
+  gap: var(--space);
+  margin: 0 0 var(--space);
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--color-border);
+}

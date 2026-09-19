@@ -1,0 +1,60 @@
+# =====================================================================
+#  MariaDB untuk Drupal — drupal/database
+#  Semua nama (project, container, IP, port, kredensial) dari .env:
+#     COMPOSE_PROJECT_NAME -> nama project compose
+#     CONTAINER_NAME       -> nama container (dipakai sebagai DB_HOST
+#                             di ../web/.env)
+#     MARIADB_IP           -> IP statis di network drupal-network
+#     MARIADB_PORT         -> port di host (container selalu 3306)
+#  Pemakaian:
+#     docker compose up -d          -> nyalakan database
+#     docker compose logs -f mariadb
+#     docker compose exec mariadb mariadb -u drupal -p drupal
+#  Network dipakai bersama container Drupal di ../web (external network).
+# =====================================================================
+name: ${COMPOSE_PROJECT_NAME:-drupal_database}
+
+services:
+  mariadb:
+    image: mariadb:${MARIADB_VERSION:-10.11}
+    container_name: ${CONTAINER_NAME:-mariadb_drupal}
+    restart: unless-stopped
+    # charset utf8mb4 (Drupal 10/11) + buffer pool & packet size untuk
+    # operasi Drupal (import, cache, tabel besar).
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+      --max-allowed-packet=64M
+    environment:
+      # :? = compose berhenti dengan pesan jelas bila .env belum diisi
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?MARIADB_ROOT_PASSWORD belum diisi di .env}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-drupal}
+      MARIADB_USER: ${MARIADB_USER:-drupal}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?MARIADB_PASSWORD belum diisi di .env}
+      MARIADB_AUTO_UPGRADE: "1"
+      TZ: ${TZ:-Asia/Jakarta}
+    ports:
+      - "${MARIADB_BIND:-0.0.0.0}:${MARIADB_PORT:-3306}:3306"
+    networks:
+      # IP statis supaya alamat DB tetap sama walau container di-recreate,
+      # sekaligus bisa dipakai sebagai DB_HOST dari container lain.
+      drupal-net:
+        ipv4_address: ${MARIADB_IP:-172.22.0.3}
+    volumes:
+      - ${DATA_DIR:-./data}:/var/lib/mysql
+    healthcheck:
+      # healthcheck.sh sudah tersedia di image mariadb:10.11
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+networks:
+  # network dibuat manual (bukan oleh compose) karena dipakai bersama
+  # stack Drupal di folder ../web. Alias `drupal-net` dipakai di service,
+  # sedangkan nama aslinya (external) diambil dari NETWORK_NAME di .env.
+  drupal-net:
+    name: ${NETWORK_NAME:-drupal-network}
+    external: true

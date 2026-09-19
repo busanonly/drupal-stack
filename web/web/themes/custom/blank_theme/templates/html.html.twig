@@ -1,0 +1,33 @@
+{#
+/**
+ * @file
+ * Struktur dasar halaman (html/head/body) — theme blank_theme.
+ *
+ * Catatan penting: Drupal (system_page_attachments) sudah menambahkan sendiri
+ *   <meta charset>, <meta name="viewport">, <meta name="Generator">,
+ *   favicon, dan library `system/base` (berisi .visually-hidden dsb),
+ *   sehingga TIDAK perlu ditulis lagi di sini.
+ *
+ * Placeholder di bawah adalah lokasi Drupal menyuntikkan CSS/JS dari library
+ * (termasuk css/base.css milik theme ini).
+ */
+#}
+<!DOCTYPE html>
+<html{{ html_attributes }}>
+  <head>
+    <head-placeholder token="{{ placeholder_token }}">
+    <title>{{ head_title|safe_join(' | ') }}</title>
+    <css-placeholder token="{{ placeholder_token }}">
+    <js-placeholder token="{{ placeholder_token }}">
+  </head>
+  <body{{ attributes }}>
+    {# Link aksesibilitas; target #main-content ada di page.html.twig. #}
+    <a href="#main-content" class="visually-hidden focusable">
+      {{ 'Skip to main content'|t }}
+    </a>
+    {{ page_top }}
+    {{ page }}
+    {{ page_bottom }}
+    <js-bottom-placeholder token="{{ placeholder_token }}">
+  </body>
+</html>

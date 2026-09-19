@@ -1,0 +1,6 @@
+# konfigurasi lokal (berisi password)
+.env
+
+# data database & hasil dump
+data/
+backup/

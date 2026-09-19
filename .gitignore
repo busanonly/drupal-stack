@@ -1,0 +1,18 @@
+# konfigurasi lokal berisi password
+.env
+**/.env
+
+# data & backup database
+/database/data/
+/database/backup/
+
+# dependency composer & docroot hasil generate
+/web/vendor/
+/web/web/core/
+/web/web/modules/contrib/
+/web/web/themes/contrib/
+/web/web/profiles/contrib/
+/web/web/libraries/
+/web/web/sites/*/files/
+/web/web/sites/*/private/
+/web/web/sites/*/settings.php

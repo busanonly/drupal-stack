@@ -1,0 +1,81 @@
+{#
+/**
+ * @file
+ * Template halaman utama — theme __THEME__.
+ *
+ * Region yang tersedia (lihat __THEME__.info.yml):
+ * page.header, page.primary_menu, page.breadcrumb, page.highlighted,
+ * page.help, page.content, page.sidebar_first, page.footer.
+ *
+ * Variabel berguna: title, title_prefix, title_suffix, tabs, messages,
+ * is_front, logged_in, is_admin, front_page.
+ */
+#}
+<div class="layout-container">
+
+  {% if page.header %}
+    <header class="site-header">
+      {{ page.header }}
+    </header>
+  {% endif %}
+
+  {% if page.primary_menu %}
+    <nav class="site-nav" aria-label="{{ 'Main navigation'|t }}">
+      {{ page.primary_menu }}
+    </nav>
+  {% endif %}
+
+  {% if page.breadcrumb %}
+    <div class="site-breadcrumb">
+      {{ page.breadcrumb }}
+    </div>
+  {% endif %}
+
+  {% if page.highlighted %}
+    <div class="site-highlighted">
+      {{ page.highlighted }}
+    </div>
+  {% endif %}
+
+  {% if page.help %}
+    <div class="site-help">
+      {{ page.help }}
+    </div>
+  {% endif %}
+
+  {% set has_sidebar = page.sidebar_first is not empty %}
+  <main id="main-content" class="layout-main{{ has_sidebar ? ' has-sidebar' }}">
+    <div class="layout-content">
+
+      {{ messages }}
+
+      {{ title_prefix }}
+      {% if title %}
+        <h1 class="page-title">{{ title }}</h1>
+      {% endif %}
+      {{ title_suffix }}
+
+      {% if tabs %}
+        <nav class="page-tabs">
+          {{ tabs }}
+        </nav>
+      {% endif %}
+
+      {{ page.content }}
+
+    </div>
+
+    {% if has_sidebar %}
+      <aside class="layout-sidebar-first">
+        {{ page.sidebar_first }}
+      </aside>
+    {% endif %}
+  </main>
+
+  {% if page.footer %}
+    <footer class="site-footer">
+      {{ page.footer }}
+    </footer>
+  {% endif %}
+
+</div>

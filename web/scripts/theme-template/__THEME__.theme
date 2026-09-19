@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * Hook dan fungsi untuk theme __THEME_LABEL__.
+ *
+ * Theme kosongan: isinya sengaja dikosongkan. Pola nama fungsi hook adalah
+ * <machine_name>_<hook>, contoh: __THEME___preprocess_page().
+ *
+ * Contoh-contoh di bawah sengaja dikomentari — hapus komentar bila dipakai.
+ */
+
+// use Drupal\Core\Form\FormStateInterface;
+// use Drupal\Core\Template\Attribute;
+
+/**
+ * Menambah variabel/class khusus untuk html.html.twig.
+ *
+ * function __THEME___preprocess_html(array &$variables): void {
+ *   $variables['attributes']['class'][] = 'theme-__THEME__';
+ * }
+ */
+
+/**
+ * Menambah variabel untuk page.html.twig.
+ *
+ * function __THEME___preprocess_page(array &$variables): void {
+ *   $variables['custom_value'] = 'contoh';
+ * }
+ */
+
+/**
+ * Menambah saran nama template (mis. page--front.html.twig).
+ *
+ * function __THEME___theme_suggestions_page_alter(array &$suggestions, array $variables): void {
+ *   if ($variables['is_front']) {
+ *     $suggestions[] = '__THEME___page__front';
+ *   }
+ * }
+ */
+
+/**
+ * Form pengaturan theme (tampil di Appearance > Settings).
+ *
+ * function __THEME___form_system_theme_settings_alter(array &$form, FormStateInterface $form_state): void {
+ *   $form['__THEME__']['contoh'] = [
+ *     '#type' => 'textfield',
+ *     '#title' => t('Contoh pengaturan'),
+ *     '#default_value' => theme_get_setting('contoh'),
+ *   ];
+ * }
+ */

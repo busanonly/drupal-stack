@@ -1,0 +1,83 @@
+# =====================================================================
+#  Drupal 11 (php-fpm + nginx) — drupal/web
+#  Semua nama & port diambil dari .env:
+#     COMPOSE_PROJECT_NAME -> nama project compose
+#     DRUPAL_CONTAINER     -> container php-fpm (service: drupal)
+#     NGINX_CONTAINER      -> container nginx     (service: nginx)
+#     NGINX_PORT           -> port host untuk web Drupal
+#     DRUPAL_IP/NGINX_IP   -> IP statis di network drupal-network
+#     DB_*                 -> koneksi ke MariaDB di ../database
+#  Pemakaian:
+#     docker compose up -d --build   -> http://<host>:<NGINX_PORT>
+#     docker compose exec drupal sh  -> masuk ke container php-fpm
+#  Container database (../database) memakai network yang sama, jadi
+#  hostname `DB_HOST` dan service `drupal` bisa saling diakses.
+# =====================================================================
+name: ${COMPOSE_PROJECT_NAME:-drupal_web}
+
+services:
+  # --- PHP-FPM: menjalankan Drupal ---
+  drupal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${IMAGE_NAME:-drupal/php}:${IMAGE_TAG:-dev}
+    container_name: ${DRUPAL_CONTAINER:-drupal_php}
+    restart: unless-stopped
+    working_dir: /var/www/html
+    # kredensial DB, salt, TZ, dll dikirim dari .env ke container
+    env_file:
+      - .env
+    environment:
+      DB_HOST: ${DB_HOST:-mariadb_drupal}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-drupal}
+      DB_USER: ${DB_USER:-drupal}
+      DB_PASSWORD: ${DB_PASSWORD:-drupal_password_anda}
+      DRUPAL_HASH_SALT: ${DRUPAL_HASH_SALT:-ubah-salt-ini}
+      TZ: ${TZ:-Asia/Jakarta}
+    volumes:
+      # seluruh root proyek Drupal (composer.json, vendor/, web/) dari host
+      - ./:/var/www/html
+      # konfigurasi PHP (tanpa perlu rebuild image)
+      - ./config/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+    networks:
+      drupal-net:
+        ipv4_address: ${DRUPAL_IP:-172.22.0.4}
+    healthcheck:
+      # php-fpm siap = port 9000 bisa dibuka
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1',9000)?0:1);"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # --- nginx: web server / reverse proxy ke php-fpm ---
+  nginx:
+    image: nginx:alpine
+    container_name: ${NGINX_CONTAINER:-drupal_nginx}
+    restart: unless-stopped
+    depends_on:
+      drupal:
+        condition: service_healthy
+    ports:
+      - "${NGINX_BIND:-0.0.0.0}:${NGINX_PORT:-8089}:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./config/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      drupal-net:
+        ipv4_address: ${NGINX_IP:-172.22.0.5}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  # network yang sama dengan container MariaDB di ../database.
+  # Alias `drupal-net` dipakai di service, nama aslinya dari NETWORK_NAME.
+  drupal-net:
+    name: ${NETWORK_NAME:-drupal-network}
+    external: true

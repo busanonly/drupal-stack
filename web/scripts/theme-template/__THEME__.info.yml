@@ -1,0 +1,27 @@
+# =====================================================================
+#  Theme kosongan (blank) — tanpa base theme, untuk dibangun dari nol.
+#  File ini dihasilkan otomatis oleh scripts/new-theme.sh.
+#  Referensi: https://www.drupal.org/docs/develop/theming-drupal
+# =====================================================================
+name: '__THEME_LABEL__'
+type: theme
+description: 'Theme kosongan (blank) tanpa base theme — titik awal membangun tema sendiri dari nol.'
+package: Custom
+# Drupal 11. Pakai '^10.3 || ^11' bila theme juga dipakai di Drupal 10.
+core_version_requirement: ^11
+# false = tidak mewarisi theme apa pun; seluruh markup diatur theme ini.
+base theme: false
+# Library yang dimuat di SEMUA halaman (lihat __THEME__.libraries.yml).
+libraries:
+  - __THEME__/base
+# Region yang bisa diisi blok lewat UI Appearance > Block layout.
+# Posisi render tiap region diatur di templates/page.html.twig.
+regions:
+  header: Header
+  primary_menu: 'Primary menu'
+  breadcrumb: Breadcrumb
+  highlighted: Highlighted
+  help: Help
+  content: Content
+  sidebar_first: 'Sidebar first'
+  footer: Footer

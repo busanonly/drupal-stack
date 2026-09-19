@@ -1,0 +1,15 @@
+# =====================================================================
+#  Library CSS/JS untuk theme blank_theme.
+#  Library `base` otomatis dimuat di semua halaman (lihat info.yml).
+#  Memuat library lain dari Twig:
+#     {{ attach_library('blank_theme/base') }}
+# =====================================================================
+base:
+  version: 1.x
+  css:
+    theme:
+      css/base.css: {}
+  # js:
+  #   js/app.js: { attributes: { defer: true } }
+  # dependencies:
+  #   - core/drupal

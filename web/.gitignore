@@ -1,0 +1,28 @@
+# --- konfigurasi lokal ---
+.env
+
+# --- cache composer (untuk seeding dist) ---
+/.composer-cache/
+
+# --- dependency composer ---
+/vendor/
+
+# --- docroot: core, module/theme kontribusi, library ---
+/web/core/
+/web/modules/contrib/
+/web/themes/contrib/
+/web/profiles/contrib/
+/web/libraries/
+/web/sites/*/files/
+/web/sites/*/private/
+/web/sites/*/settings.php
+/web/sites/*/services.yml
+/web/.htaccess
+/web/index.php
+/web/robots.txt
+/web/update.php
+/web/web.config
+
+# --- buatan Drupal ---
+/web/sites/default/files/
+/files/
