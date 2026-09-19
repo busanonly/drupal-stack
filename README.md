@@ -449,4 +449,25 @@ Langkah pakai:
 Dokumentasi lengkap (pemetaan status → state payment, alur async, void/refund,
 troubleshooting): `web/web/modules/custom/commerce_midtrans/README.md`.
 
+### Aktivasi cepat (contoh: origin Cempaka Putih + Midtrans sandbox)
+
+Skrip idempotent `web/scripts/setup-ongkir-midtrans.php` menyiapkan semuanya
+sekali jalan:
+
+- menambah field **`weight`** (physical, gram) pada product variation type
+  `produk` **dan mengisinya** — Commerce hanya menganggap order *shippable*
+  (langkah pengiriman muncul di checkout) bila purchased entity punya field
+  `weight`;
+- membuat shipping method ongkir dengan origin **Kecamatan Cempaka Putih**
+  (`317105`, kelurahan **Rawasari** termasuk di dalamnya);
+- membuat payment gateway **Midtrans Snap** mode test (popup snap.js);
+- melengkapi checkout flow `default` dengan pane `shipping_information`,
+  `payment_information`, dan `payment_process`.
+
+```bash
+cd /home/projects/drupal/web
+docker compose exec --user 1000:1000 drupal vendor/bin/drush php:script scripts/setup-ongkir-midtrans.php
+```
+
+
 
