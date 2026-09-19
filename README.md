@@ -59,6 +59,51 @@ Perintah lain: `make init NAME=...` (hanya siapkan .env + network),
 Ingin .env manual? `cp database/.env.example database/.env` lalu sesuaikan —
 tapi jalur yang disarankan adalah `make init`.
 
+### Alur multi-project (web1, web2, web3, …)
+
+Peran tiap repo:
+
+| Repo | Peran |
+|---|---|
+| `busanonly/drupal-stack-template` | **template** (GitHub template repo) — sumber untuk semua project baru. Tidak untuk dipakai langsung sebagai situs production. |
+| `busanonly/web1`, `busanonly/web2`, … | **repo per project** — hasil "Use this template" / clone dari template; di sini kode project Anda di-commit & di-push. |
+| `busanonly/drupal-stack` | repo project pertama (stack yang sedang jalan). Bisa di-rename ke nama situsnya kapan saja (Settings → Rename, lalu `git remote set-url`). |
+
+Membuat project baru (contoh: `web1`):
+
+```bash
+# 1) di GitHub: buka drupal-stack-template → "Use this template" → name: web1
+#    (atau lewat terminal, clone lalu arahkan ke repo web1)
+git clone https://github.com/busanonly/web1.git /home/projects/web1
+cd /home/projects/web1
+
+# 2) bootstrap stack: nama container/network, subnet, IP, port, password dibuat
+#    otomatis & unik sehingga tidak bentrok dengan project lain di host yang sama
+make new NAME=web1
+
+# 3) simpan ke repo project
+git add -A && git commit -m "init web1" && git push
+```
+
+Menarik pembaruan stack dari template ke project yang sudah jalan:
+
+```bash
+cd /home/projects/web1
+git remote add template https://github.com/busanonly/drupal-stack-template.git  # sekali saja
+git fetch template
+git merge template/main
+```
+
+Catatan:
+
+- `.env` dan `database/data/` **git-ignored** → kredensial & data DB tetap lokal
+  per project (tidak pernah ikut ter-push).
+- `make new NAME=...` otomatis menghindari bentrok: port web/DB, network, subnet,
+  dan IP statis dipilih dari yang masih bebas.
+- Setiap project berdiri sendiri: `make down`/`make up` di satu folder tidak
+  mengganggu project lain.
+
+
 
 ---
 
