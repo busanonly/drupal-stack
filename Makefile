@@ -7,6 +7,8 @@
 # =====================================================================
 NETWORK_NAME := $(shell sed -n 's/^NETWORK_NAME=//p' database/.env 2>/dev/null | head -1)
 NETWORK_NAME := $(if $(strip $(NETWORK_NAME)),$(strip $(NETWORK_NAME)),drupal-network)
+SUBNET       := $(shell sed -n 's/^NETWORK_SUBNET=//p' database/.env 2>/dev/null | head -1)
+SUBNET       := $(if $(strip $(SUBNET)),$(strip $(SUBNET)),172.22.0.0/24)
 WEB_PORT     := $(shell sed -n 's/^NGINX_PORT=//p' web/.env 2>/dev/null | head -1)
 WEB_PORT     := $(if $(strip $(WEB_PORT)),$(strip $(WEB_PORT)),8089)
 
@@ -18,15 +20,27 @@ help: ## Tampilkan daftar perintah
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
-network: ## Buat network drupal (172.22.0.0/24) bila belum ada
+network: ## Buat network drupal (subnet dari .env) bila belum ada
 	@docker network inspect $(NETWORK_NAME) >/dev/null 2>&1 \
-		|| docker network create --subnet 172.22.0.0/24 $(NETWORK_NAME)
+		|| docker network create --subnet $(SUBNET) $(NETWORK_NAME)
 	@docker network inspect $(NETWORK_NAME) --format 'network {{.Name}} subnet={{range .IPAM.Config}}{{.Subnet}}{{end}} siap'
 
 env: ## Buat .env di database/ & web/ dari .env.example bila belum ada
 	@test -f database/.env || cp database/.env.example database/.env
 	@test -f web/.env || cp web/.env.example web/.env
-	@echo "file .env siap"
+	@echo "file .env siap (nilai masih contoh — sebaiknya pakai 'make init NAME=...')"
+
+init: ## Siapkan project baru dari template: make init NAME=proyek2 [WEB_PORT=8090 DB_PORT=3307]
+	@sh scripts/init-project.sh '$(NAME)' $(if $(WEB_PORT),--web-port $(WEB_PORT),) $(if $(DB_PORT),--db-port $(DB_PORT),) $(if $(SUBNET_ARG),--subnet $(SUBNET_ARG),) $(if $(FORCE),--force,)
+
+deps: ## Isi dependency untuk clone/project baru: composer install + settings.php
+	-@$(MAKE) -C web perms
+	$(MAKE) -C web composer CMD="install --no-interaction"
+	$(MAKE) -C web settings
+
+new: init up deps ## Bootstrap project baru sekali jalan: make new NAME=proyek2
+	@echo ""
+	@echo "Project '$(NAME)' siap. Installer Drupal: http://<IP-server>:$$(sed -n 's/^NGINX_PORT=//p' web/.env | head -1)/core/install.php"
 
 up: network env ## Nyalakan database lalu web (detached)
 	$(MAKE) -C database up
@@ -71,4 +85,4 @@ clean: ## Stop + hapus semua container & image lokal (data DB dihapus!)
 	-$(MAKE) -C web clean
 	-$(MAKE) -C database clean
 
-.PHONY: help network env up down restart logs logs-web ps health db-check shell-db shell-web dump clean
+.PHONY: help network env init deps new up down restart logs logs-web ps health db-check shell-db shell-web dump clean

@@ -1,13 +1,17 @@
 # Drupal 11 + MariaDB di Docker
 
 Stack Drupal 11 (PHP-FPM + nginx) dan MariaDB 10.11 yang berjalan di **dua folder
-terpisah** tetapi berbagi **satu network Docker** (`drupal-network`), sehingga
-container Drupal bisa mengakses database lewat `DB_HOST=mariadb_drupal`.
+terpisah** tetapi berbagi **satu network Docker** (`<project>-network`), sehingga
+container Drupal bisa mengakses database lewat `DB_HOST=<project>_db`.
 
-| Item | Nilai |
+Nilai di tabel berikut adalah **contoh untuk project bernama `drupal`**. Untuk
+project baru, semuanya dibuat otomatis (nama container, network, subnet, IP, port,
+password) — lihat bagian **0**.
+
+| Item | Nilai (contoh: `PROJECT_NAME=drupal`) |
 |---|---|
 | Network | `drupal-network` (bridge, subnet `172.22.0.0/24`, dibuat manual / `external`) |
-| Database | MariaDB `10.11` — container `mariadb_drupal` — IP `172.22.0.3` — host port `3306` |
+| Database | MariaDB `10.11` — container `drupal_db` — IP `172.22.0.3` — host port `3306` |
 | Drupal | PHP-FPM — container `drupal_php` — IP `172.22.0.4` |
 | Web server | nginx:alpine — container `drupal_nginx` — IP `172.22.0.5` — host port **8089** |
 | Docroot | `/var/www/html/web` (root proyek Drupal di-mount ke `/var/www/html`) |
@@ -17,31 +21,79 @@ container Drupal bisa mengakses database lewat `DB_HOST=mariadb_drupal`.
 
 ---
 
+## 0. Pakai sebagai template untuk project web baru
+
+Repo ini adalah **starter/template**: satu perintah menyiapkan project baru
+lengkap dengan nama container, network, subnet, IP statis, port, dan password
+yang **unik** (tidak bentrok dengan stack lain di host yang sama).
+
+```bash
+# 1) ambil template (clone / "Use this template" di GitHub)
+git clone https://github.com/busanonly/drupal-stack.git /home/projects/proyek2
+cd /home/projects/proyek2
+
+# 2) bootstrap: buat .env (acak) + network, lalu build/start + composer install + settings
+make new NAME=proyek2
+
+# port bisa dipaksa bila perlu:
+make new NAME=proyek2 WEB_PORT=8090 DB_PORT=3307
+```
+
+Yang dihasilkan `make new` (= `init` + `up` + `deps`):
+
+| Langkah | Isi |
+|---|---|
+| `init` | menjalankan `scripts/init-project.sh` → `database/.env` + `web/.env` terisi `PROJECT_NAME`, `<project>_db`/`<project>_php`/`<project>_nginx`, `<project>-network`, subnet bebas (172.23+), IP `.3/.4/.5`, port bebas (8089+/3306+), password & salt acak; lalu network docker dibuat |
+| `up` | build image `proyek2/php:dev` + nyalakan MariaDB, php-fpm, nginx |
+| `deps` | `composer install` (vendor + scaffold docroot) dan `make settings` (settings.php dari `.env`) |
+
+Setelah itu buka `http://<IP-server>:<NGINX_PORT>/core/install.php` dan jalankan
+installer (language → Standard → admin).
+
+> Butuh `docker`, `openssl` (opsional), dan `ss`/`netstat` di host untuk
+> auto-deteksi port bebas. Kalau script dijalankan sebagai root pada folder milik
+> user lain, tambahkan `git config --global --add safe.directory <folder>`.
+
+Perintah lain: `make init NAME=...` (hanya siapkan .env + network),
+`make deps` (composer install + settings), `make up/down/ps/logs`.
+Ingin .env manual? `cp database/.env.example database/.env` lalu sesuaikan —
+tapi jalur yang disarankan adalah `make init`.
+
+
+---
+
 ## 1. Struktur folder
 
 ```
 drupal/
-├── Makefile                     # orkestrasi: network + database + web
+├── Makefile                     # orkestrasi: init/new + network + database + web
 ├── README.md
+├── scripts/
+│   └── init-project.sh          # bootstrap project baru (nama/port/IP/kredensial otomatis)
 ├── database/                    # stack database (MariaDB)
-│   ├── .env                     # konfigurasi database (password, port, IP)
-│   ├── .env.example
+│   ├── .env                     # konfigurasi database (password, port, IP) — jangan di-commit
+│   ├── .env.example             # template nilai .env
 │   ├── docker-compose.yml       # service: mariadb
 │   ├── Makefile                 # make up / dump / dbshell ...
 │   ├── data/                    # data MariaDB (bind mount, jangan di-commit)
 │   └── backup/                  # hasil `make dump`
 └── web/                         # stack aplikasi (Drupal) + root proyek Composer
-    ├── .env                     # konfigurasi web + kredensial DB
+    ├── .env                     # konfigurasi web + kredensial DB — jangan di-commit
     ├── .env.example
     ├── Dockerfile               # php:8.3-fpm + ekstensi + composer
     ├── docker-compose.yml       # service: drupal (php-fpm) + nginx
-    ├── Makefile                 # make up / shell / composer / drush ...
+    ├── Makefile                 # make up / shell / composer / drush / theme / settings
     ├── config/
     │   ├── php.ini              # php.ini (memory_limit, opcache, TZ)
     │   └── nginx/default.conf   # vhost Drupal
+    ├── scripts/                 # tools dalam proyek Drupal:
+    │   ├── gen-settings.sh      #   settings.php dari .env
+    │   ├── new-theme.sh         #   generator theme kosongan
+    │   ├── check-theme.php      #   validator theme
+    │   └── theme-template/      #   template theme (token __THEME__)
     ├── composer.json            # drupal/recommended-project
     ├── composer.lock
-    ├── vendor/                  # dependency Composer
+    ├── vendor/                  # dependency Composer (dibuat `make deps`)
     └── web/                     # ← DOCROOT Drupal (index.php, core/, sites/, modules/)
 ```
 
@@ -56,22 +108,21 @@ drupal/
 ```bash
 cd /home/projects/drupal
 
-# 1) buat network drupal (idempoten, aman diulang)
-make network
-#    atau manual:
-#    docker network create --subnet 172.22.0.0/24 drupal-network
-
-# 2) siapkan .env di masing-masing folder (kalau belum ada)
-make env
-nano database/.env      # ubah MARIADB_ROOT_PASSWORD & MARIADB_PASSWORD
-nano web/.env           # DB_* HARUS sama dengan database/.env, ubah DRUPAL_HASH_SALT
-#    salt acak: openssl rand -hex 32
-
-# 3) nyalakan database + web
-make up
+# cara tercepat (disarankan): siapkan .env + network, build, start, dependency
+make new NAME=drupal
 
 # 4) buka installer Drupal
-#    http://<IP-server>:8089
+#    http://<IP-server>:8089/core/install.php
+```
+
+Bila ingin langkah terpisah:
+
+```bash
+make init NAME=drupal   # buat .env (password/salt acak) + docker network
+nano database/.env      # (opsional) sesuaikan port/password
+make up                 # build image + nyalakan MariaDB, php-fpm, nginx
+make deps               # composer install + settings.php  (wajib untuk clone baru)
+make network            # (bila .env sudah ada sendiri) buat network dari subnet .env
 ```
 
 Saat installer Drupal meminta koneksi database (hanya bila `settings.php` belum
@@ -81,29 +132,30 @@ dibuat — lihat catatan di bawah), isi:
 |---|---|
 | Database name | `drupal` (`DB_NAME` di `.env`) |
 | Database username | `drupal` (`DB_USER` di `.env`) |
-| Database password | `drupal_password_anda` (`DB_PASSWORD` di `.env`) |
-| Advanced options → Host | `mariadb_drupal` (nama container MariaDB) |
+| Database password | sesuai `DB_PASSWORD` di `web/.env` |
+| Advanced options → Host | `<project>_db` — contoh `drupal_db` (`DB_HOST` di `web/.env`) |
 | Port | `3306` (port internal container, **bukan** host mapping) |
 
 > **Catatan**: `web/sites/default/settings.php` sudah dibuat dari `.env`
-> (`make settings`), sehingga halaman pertama installer adalah **“Choose language”**
-> dan langkah database dilewati (koneksi diverifikasi otomatis). Sisa langkah:
-> pilih profil (Standard), isi nama situs + akun admin, selesai.
+> (`make settings` / `make deps`), sehingga halaman pertama installer adalah
+> **“Choose language”** dan langkah database dilewati (koneksi diverifikasi
+> otomatis). Sisa langkah: pilih profil (Standard), isi nama situs + akun admin.
 
 ### Bila repo ini baru di-clone
 
 Yang **tidak** ikut di-commit (memang sengaja): `.env`, `web/vendor/`,
 `web/web/core/`, docroot hasil scaffold (`web/index.php`, `.htaccess`, `robots.txt`, …),
-`web/sites/default/settings.php`, dan `database/data/`. Setelah `make up`:
+`web/sites/default/settings.php`, dan `database/data/`. Jadi setelah clone cukup:
 
 ```bash
-cd /home/projects/drupal/web
-make composer CMD="install --no-interaction"   # dependency + scaffold docroot (web/)
-make settings                                  # settings.php dari .env
+make new NAME=nama_project   # = init + up + deps (lengkap)
 ```
 
-Alternatif langsung di host (tanpa container): `cd web && composer install`,
-lalu `sh scripts/gen-settings.sh web`.
+atau kalau `.env` sudah ada: `make up` lalu `make deps`.
+
+> Tips: agar `composer install` cepat, simpan cache dist dari project lama
+> (`cp -r <project-lama>/web/.composer-cache web/`) — folder ini git-ignored dan
+> mempercepat instalasi ulang karena dist tidak diunduh lagi.
 
 ---
 
@@ -113,8 +165,11 @@ Dari root `drupal/`:
 
 | Perintah | Fungsi |
 |---|---|
-| `make network` | buat network `drupal-network` bila belum ada |
-| `make env` | buat `.env` di `database/` & `web/` dari `.env.example` |
+| `make new NAME=proyek2` | **bootstrap project baru**: init + up + deps |
+| `make init NAME=proyek2` | buat `.env` (nama/port/IP/password acak) + docker network |
+| `make deps` | `composer install` + `settings.php` (untuk clone/project baru) |
+| `make network` | buat network (nama & subnet dari `.env`) bila belum ada |
+| `make env` | buat `.env` dari `.env.example` (jalur manual) |
 | `make up` | nyalakan MariaDB lalu Drupal (+build) |
 | `make down` | matikan kedua stack (data DB aman) |
 | `make ps` / `make health` | status & health semua container |

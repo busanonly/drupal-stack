@@ -17,6 +17,8 @@ NGINX_CT  := $(shell sed -n 's/^NGINX_CONTAINER=//p' $(ENV_FILE) 2>/dev/null | h
 NGINX_CT  := $(if $(strip $(NGINX_CT)),$(strip $(NGINX_CT)),drupal_nginx)
 NETWORK   := $(shell sed -n 's/^NETWORK_NAME=//p' $(ENV_FILE) 2>/dev/null | head -1)
 NETWORK   := $(if $(strip $(NETWORK)),$(strip $(NETWORK)),drupal-network)
+SUBNET    := $(shell sed -n 's/^NETWORK_SUBNET=//p' $(ENV_FILE) 2>/dev/null | head -1)
+SUBNET    := $(if $(strip $(SUBNET)),$(strip $(SUBNET)),172.22.0.0/24)
 PORT      := $(shell sed -n 's/^NGINX_PORT=//p' $(ENV_FILE) 2>/dev/null | head -1)
 PORT      := $(if $(strip $(PORT)),$(strip $(PORT)),8089)
 
@@ -34,8 +36,8 @@ help: ## Tampilkan daftar perintah
 
 network: ## Buat network drupal bila belum ada
 	@docker network inspect $(NETWORK) >/dev/null 2>&1 \
-		|| docker network create --subnet 172.22.0.0/24 $(NETWORK)
-	@echo "network $(NETWORK) siap"
+		|| docker network create --subnet $(SUBNET) $(NETWORK)
+	@echo "network $(NETWORK) ($(SUBNET)) siap"
 
 config: .env ## Tampilkan konfigurasi yang aktif
 	$(DC) config

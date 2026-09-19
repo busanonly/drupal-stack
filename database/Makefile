@@ -13,6 +13,8 @@ CONTAINER:= $(shell sed -n 's/^CONTAINER_NAME=//p' $(ENV_FILE) 2>/dev/null | hea
 CONTAINER:= $(if $(strip $(CONTAINER)),$(strip $(CONTAINER)),mariadb_drupal)
 NETWORK  := $(shell sed -n 's/^NETWORK_NAME=//p' $(ENV_FILE) 2>/dev/null | head -1)
 NETWORK  := $(if $(strip $(NETWORK)),$(strip $(NETWORK)),drupal-network)
+SUBNET   := $(shell sed -n 's/^NETWORK_SUBNET=//p' $(ENV_FILE) 2>/dev/null | head -1)
+SUBNET   := $(if $(strip $(SUBNET)),$(strip $(SUBNET)),172.22.0.0/24)
 DB_NAME  := $(shell sed -n 's/^MARIADB_DATABASE=//p' $(ENV_FILE) 2>/dev/null | head -1)
 DB_NAME  := $(if $(strip $(DB_NAME)),$(strip $(DB_NAME)),drupal)
 DB_USER  := $(shell sed -n 's/^MARIADB_USER=//p' $(ENV_FILE) 2>/dev/null | head -1)
@@ -36,8 +38,8 @@ help: ## Tampilkan daftar perintah
 
 network: ## Buat network drupal bila belum ada
 	@docker network inspect $(NETWORK) >/dev/null 2>&1 \
-		|| docker network create --subnet 172.22.0.0/24 $(NETWORK)
-	@echo "network $(NETWORK) siap"
+		|| docker network create --subnet $(SUBNET) $(NETWORK)
+	@echo "network $(NETWORK) ($(SUBNET)) siap"
 
 config: .env ## Tampilkan konfigurasi yang aktif
 	$(DC) config
