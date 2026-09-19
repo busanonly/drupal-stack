@@ -1,0 +1,16 @@
+{
+    "name": "busanonly/commerce_ongkir",
+    "description": "Drupal 11 + Commerce: shipping method (ongkir) yang mengambil tarif dari API Cek Ongkir v2 api.co.id — endpoint /courier/v2/rates berbasis kode kecamatan. Kredensial dibaca dari environment (.env).",
+    "type": "drupal-custom-module",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://github.com/busanonly/commerce_ongkir",
+    "support": {
+        "issues": "https://github.com/busanonly/commerce_ongkir/issues",
+        "source": "https://github.com/busanonly/commerce_ongkir"
+    },
+    "require": {
+        "drupal/commerce": "^3.3",
+        "drupal/commerce_shipping": "^3.0",
+        "drupal/physical": "^1.5"
+    }
+}

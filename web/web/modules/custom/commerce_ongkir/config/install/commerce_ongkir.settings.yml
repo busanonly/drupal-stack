@@ -1,0 +1,6 @@
+api_base_url: 'https://use.api.co.id'
+api_key: ''
+timeout: 15
+cache_ttl: 86400
+log_requests: false
+origin_district_code: ''

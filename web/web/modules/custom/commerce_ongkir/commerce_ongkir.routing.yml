@@ -1,0 +1,7 @@
+commerce_ongkir.settings:
+  path: '/admin/commerce/config/ongkir'
+  defaults:
+    _form: '\Drupal\commerce_ongkir\Form\SettingsForm'
+    _title: 'Cek Ongkir (API.co.id)'
+  requirements:
+    _permission: 'administer commerce_ongkir'

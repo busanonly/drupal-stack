@@ -1,0 +1,28 @@
+services:
+
+  logger.channel.commerce_ongkir:
+    parent: logger.channel_base
+    arguments: ['commerce_ongkir']
+
+  cache.commerce_ongkir:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    factory: cache_factory:get
+    arguments: [commerce_ongkir]
+    tags:
+      - { name: cache.bin }
+
+  # HTTP client untuk API Cek Ongkir v2 (https://use.api.co.id).
+  commerce_ongkir.api_client:
+    class: Drupal\commerce_ongkir\OngkirApiClient
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@cache.commerce_ongkir'
+      - '@logger.channel.commerce_ongkir'
+      - '@datetime.time'
+
+  # Penentu kode kecamatan tujuan (origin_district_code / destination_district_code).
+  commerce_ongkir.district_resolver:
+    class: Drupal\commerce_ongkir\DistrictResolver
+    arguments:
+      - '@entity_type.manager'

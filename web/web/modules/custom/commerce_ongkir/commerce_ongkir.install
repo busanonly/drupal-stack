@@ -1,0 +1,184 @@
+<?php
+
+/**
+ * @file
+ * Install/uninstall hooks untuk modul commerce_ongkir.
+ */
+
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Nama field kode kecamatan pada profile customer.
+ *
+ * @return string
+ *   Nama field.
+ */
+function commerce_ongkir_district_field(): string {
+  return 'field_kecamatan';
+}
+
+/**
+ * Implements hook_install().
+ */
+function commerce_ongkir_install() {
+  $field_name = commerce_ongkir_district_field();
+
+  // 1) Field storage (profile) untuk menyimpan kode kecamatan.
+  if (!FieldStorageConfig::loadByName('profile', $field_name)) {
+    FieldStorageConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => 'profile',
+      'type' => 'string',
+      'cardinality' => 1,
+      'translatable' => FALSE,
+      'settings' => [
+        'max_length' => 16,
+        'case_sensitive' => FALSE,
+        'is_ascii' => TRUE,
+      ],
+    ])->save();
+  }
+
+  // 2) Field instance pada profile type customer.
+  if (!FieldConfig::loadByName('profile', 'customer', $field_name)) {
+    FieldConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => 'profile',
+      'bundle' => 'customer',
+      'label' => 'Kecamatan (kode ongkir)',
+      'description' => 'Kode kecamatan tujuan pengiriman (district code API Cek Ongkir v2), contoh 317405.',
+      'required' => FALSE,
+      'settings' => [],
+    ])->save();
+  }
+
+  // 3) Tempelkan widget pada form display & view display.
+  commerce_ongkir_sync_displays($field_name);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function commerce_ongkir_uninstall() {
+  $field_name = commerce_ongkir_district_field();
+
+  // Hapus komponen field dari semua display profile customer.
+  foreach (['core.entity_form_display.', 'core.entity_view_display.'] as $prefix) {
+    foreach (\Drupal::configFactory()->listAll($prefix . 'profile.customer.') as $name) {
+      $display_id = substr($name, strlen($prefix));
+      $type = str_starts_with($prefix, 'core.entity_form_display.') ? 'entity_form_display' : 'entity_view_display';
+      $storage = \Drupal::entityTypeManager()->getStorage($type);
+      $display = $storage->load($display_id);
+      if ($display && $display->getComponent($field_name)) {
+        $display->removeComponent($field_name)->save();
+      }
+    }
+  }
+
+  // Hapus form display yang dibuat modul ini (shipping/billing).
+  $created = \Drupal::state()->get('commerce_ongkir.created_form_displays', []);
+  foreach ($created as $display_id) {
+    if ($display = EntityFormDisplay::load($display_id)) {
+      $display->delete();
+    }
+  }
+  \Drupal::state()->delete('commerce_ongkir.created_form_displays');
+
+  // Hapus field.
+  if ($field = FieldConfig::loadByName('profile', 'customer', $field_name)) {
+    $field->delete();
+  }
+  if ($storage = FieldStorageConfig::loadByName('profile', $field_name)) {
+    $storage->delete();
+  }
+}
+
+/**
+ * Menempelkan widget kecamatan pada form display & view display profile.
+ *
+ * - Form display "default": field ditambahkan.
+ * - Form display "shipping": dibuat bila belum ada (kecamatan diminta di sini).
+ * - Form display "billing": dibuat bila belum ada, tanpa field kecamatan.
+ *
+ * @param string $field_name
+ *   Nama field kode kecamatan.
+ */
+function commerce_ongkir_sync_displays(string $field_name): void {
+  // Pastikan definisi widget dari modul ini terdeteksi walau cache plugin
+  // belum di-refresh pada saat instalasi.
+  $widget_manager = \Drupal::service('plugin.manager.field.widget');
+  $widget_manager->clearCachedDefinitions();
+  if (!$widget_manager->hasDefinition('ongkir_kecamatan')) {
+    \Drupal::logger('commerce_ongkir')->warning('Widget ongkir_kecamatan belum terdeteksi. Pasang manual pada Manage form display profile customer.');
+    return;
+  }
+
+  $widget_component = [
+    'type' => 'ongkir_kecamatan',
+    'weight' => 10,
+    'settings' => [],
+  ];
+  $address_component = [
+    'type' => 'address_default',
+    'weight' => 0,
+    'settings' => [],
+  ];
+
+  // Form display default.
+  if ($default_display = EntityFormDisplay::load('profile.customer.default')) {
+    $default_display->setComponent($field_name, $widget_component)->save();
+  }
+
+  // Form display shipping & billing.
+  $created = \Drupal::state()->get('commerce_ongkir.created_form_displays', []);
+  foreach (['shipping', 'billing'] as $mode) {
+    $display_id = 'profile.customer.' . $mode;
+    $display = EntityFormDisplay::load($display_id);
+    if (!$display) {
+      $display = EntityFormDisplay::create([
+        'targetEntityType' => 'profile',
+        'bundle' => 'customer',
+        'mode' => $mode,
+        'status' => TRUE,
+      ]);
+      // Salin komponen dari display default supaya field alamat tetap tampil.
+      if ($source = EntityFormDisplay::load('profile.customer.default')) {
+        foreach ($source->getComponents() as $name => $component) {
+          if ($name !== $field_name) {
+            $display->setComponent($name, $component);
+          }
+        }
+      }
+      else {
+        $display->setComponent('address', $address_component);
+      }
+      $created[] = $display_id;
+    }
+
+    if ($mode === 'shipping') {
+      $display->setComponent($field_name, $widget_component);
+    }
+    elseif ($display->getComponent($field_name)) {
+      // Alamat penagihan tidak membutuhkan kode kecamatan.
+      $display->removeComponent($field_name);
+    }
+    $display->save();
+  }
+  \Drupal::state()->set('commerce_ongkir.created_form_displays', array_values(array_unique($created)));
+
+  // View display default & admin.
+  foreach (['default', 'admin'] as $mode) {
+    $display_id = 'profile.customer.' . $mode;
+    if ($view_display = EntityViewDisplay::load($display_id)) {
+      $view_display->setComponent($field_name, [
+        'type' => 'string',
+        'weight' => 10,
+        'label' => 'above',
+        'settings' => ['link_to_entity' => FALSE],
+      ])->save();
+    }
+  }
+}

@@ -1,0 +1,12 @@
+name: 'Commerce Ongkir (API.co.id)'
+type: module
+description: 'Metode pengiriman Commerce yang mengambil tarif ongkir dari API Cek Ongkir v2 api.co.id (endpoint <code>/courier/v2/rates</code>).'
+package: Commerce (custom)
+core_version_requirement: ^11
+configure: commerce_ongkir.settings
+dependencies:
+  - commerce:commerce
+  - commerce:commerce_order
+  - commerce:commerce_price
+  - commerce:commerce_shipping
+  - physical:physical

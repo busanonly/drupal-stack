@@ -1,0 +1,6 @@
+commerce_ongkir.settings:
+  title: 'Cek Ongkir (API.co.id)'
+  description: 'Konfigurasi API Cek Ongkir v2 (base URL, API key, cache).'
+  parent: commerce.configuration
+  route_name: commerce_ongkir.settings
+  weight: 20

@@ -1,0 +1,4 @@
+administer commerce_ongkir:
+  title: 'Administer Cek Ongkir (API.co.id) settings'
+  description: 'Mengubah base URL, API key, timeout, dan cache TTL integrasi ongkir.'
+  restrict access: true

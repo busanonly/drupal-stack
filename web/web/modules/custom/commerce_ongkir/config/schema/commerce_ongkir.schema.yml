@@ -1,0 +1,78 @@
+commerce_ongkir.settings:
+  type: config_object
+  label: 'Commerce Ongkir settings'
+  mapping:
+    api_base_url:
+      type: string
+      label: 'Base URL API (tanpa trailing slash)'
+    api_key:
+      type: string
+      label: 'API key (fallback bila env API_CO_ID_KEY kosong)'
+    timeout:
+      type: integer
+      label: 'Timeout request (detik)'
+    cache_ttl:
+      type: integer
+      label: 'Cache TTL data lokasi & kurir (detik)'
+    log_requests:
+      type: boolean
+      label: 'Catat setiap request ke log'
+    origin_district_code:
+      type: string
+      label: 'Kode kecamatan asal default (toko)'
+
+commerce_shipping.commerce_shipping_method.plugin.ongkir:
+  type: commerce_shipping_method_configuration
+  label: 'Ongkir (API.co.id)'
+  mapping:
+    origin_district_code:
+      type: string
+      label: 'Kode kecamatan asal'
+    courier_filter:
+      type: string
+      label: 'Filter kurir'
+    service_filter:
+      type: string
+      label: 'Filter layanan'
+    insurance:
+      type: boolean
+      label: 'Sertakan asuransi'
+    item_value_mode:
+      type: string
+      label: 'Sumber nilai barang'
+    district_source:
+      type: string
+      label: 'Sumber kode kecamatan tujuan'
+    district_field:
+      type: string
+      label: 'Nama field kode kecamatan'
+    map_key:
+      type: string
+      label: 'Kunci peta kode kecamatan'
+    district_map:
+      type: string
+      label: 'Peta kode kecamatan'
+    weight_field:
+      type: string
+      label: 'Nama field berat produk'
+    weight_unit:
+      type: string
+      label: 'Satuan field berat'
+    default_weight:
+      type: string
+      label: 'Berat default per unit (kg)'
+    markup_percent:
+      type: string
+      label: 'Markup persen'
+    markup_flat:
+      type: string
+      label: 'Markup nominal'
+    max_rates:
+      type: integer
+      label: 'Jumlah maksimum tarif'
+    rate_label_pattern:
+      type: string
+      label: 'Pola label tarif'
+    cache_ttl:
+      type: integer
+      label: 'Cache TTL tarif (detik)'
