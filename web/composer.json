@@ -16,9 +16,11 @@
     ],
     "require": {
         "composer/installers": "^2.3",
+        "drupal/commerce": "^3.3",
+        "drupal/commerce_shipping": "^3.0",
         "drupal/core-composer-scaffold": "^11.4",
-        "drupal/core-recipe-unpack": "^11.4",
         "drupal/core-project-message": "^11.4",
+        "drupal/core-recipe-unpack": "^11.4",
         "drupal/core-recommended": "^11.4"
     },
     "conflict": {
@@ -99,5 +101,8 @@
                 "      composer remove drupal/core-project-message"
             ]
         }
+    },
+    "require-dev": {
+        "drush/drush": "^13.8"
     }
 }

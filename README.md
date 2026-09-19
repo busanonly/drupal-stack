@@ -359,3 +359,94 @@ make health
 make clean && make up
 ```
 
+---
+
+## 7. Plugin ongkir custom — modul `commerce_ongkir` (API Cek Ongkir v2 api.co.id)
+
+Modul custom di `web/web/modules/custom/commerce_ongkir/` menyediakan **shipping
+method** Commerce yang mengambil tarif dari
+`GET https://use.api.co.id/courier/v2/rates` (berbasis **kode kecamatan**).
+API key diambil dari `web/.env`:
+
+> Repo standalone modul: <https://github.com/busanonly/commerce_ongkir>
+> (`composer.json` tipe `drupal-custom-module`, bisa dipasang lewat Composer VCS).
+
+```dotenv
+API_CO_ID_KEY=isi_api_key_dari_dashboard_api_co_id
+```
+
+`docker-compose` mengirim `.env` ke container php-fpm (`env_file`) dan modul
+membacanya dengan `getenv('API_CO_ID_KEY')` → **API key tidak disimpan di
+database**. Setelah mengubah `.env`: `cd web && docker compose up -d`.
+
+Yang sudah terpasang:
+
+| Komponen | Keterangan |
+|---|---|
+| `drupal/commerce_shipping` (+ `drupal/physical`) | dependency Composer (plugin shipping method) |
+| `drush/drush` | dev-dependency agar `make drush CMD="..."` berfungsi |
+| modul `commerce_ongkir` | service API client, shipping method `Ongkir (API.co.id)`, widget kecamatan, form konfigurasi |
+| field `field_kecamatan` | dibuat otomatis pada profile **customer** (widget pada form display `default` + `shipping`, tidak pada `billing`) |
+
+Langkah setelah instalasi (sekali saja):
+
+```bash
+cd /home/projects/drupal/web
+make drush CMD="status"                       # cek drush
+# 1) uji koneksi API: Commerce → Configuration → Cek Ongkir (API.co.id)
+#    (/admin/commerce/config/ongkir) → tombol "Simpan & tes koneksi"
+# 2) buat shipping method: Commerce → Configuration → Shipping → Shipping methods
+#    plugin "Ongkir (API.co.id)", isi origin_district_code (kecamatan gudang),
+#    contoh 317405, lalu simpan
+make drush CMD="cr"
+```
+
+Dokumentasi lengkap (konfigurasi plugin, resolver kode kecamatan, berat produk,
+markup, troubleshooting): `web/web/modules/custom/commerce_ongkir/README.md`.
+
+---
+
+## 8. Payment gateway Midtrans Snap — modul `commerce_midtrans`
+
+Modul custom di `web/web/modules/custom/commerce_midtrans/` menyediakan payment
+gateway **Midtrans Snap** (popup Snap.js atau redirect) untuk Drupal Commerce,
+termasuk **webhook notifikasi** (verifikasi `signature_key` SHA512), **void**, dan
+**refund**. Kredensial dibaca dari `web/.env`:
+
+> Repo standalone modul: <https://github.com/busanonly/commerce_midtrans>
+> (`composer.json` tipe `drupal-custom-module`, bisa dipasang lewat Composer VCS).
+
+```dotenv
+MIDTRANS_MODE=sandbox
+MIDTRANS_SERVER_KEY=SB-Mid-server-xxxxxxxxxxxx
+MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxxxxxxxxxx
+MIDTRANS_SERVER_KEY_LIVE=
+MIDTRANS_CLIENT_KEY_LIVE=
+```
+
+Endpoint sandbox: `https://api.sandbox.midtrans.com` (Core API),
+`https://app.sandbox.midtrans.com/snap/v1` (Snap API — pembuatan transaksi), dan
+`https://app.sandbox.midtrans.com/snap/snap.js` (frontend Snap). Production:
+`https://api.midtrans.com`, `https://app.midtrans.com/snap/v1`,
+`https://app.midtrans.com/snap/snap.js`. Semua URL bisa diubah di halaman
+konfigurasi modul.
+
+Setelah mengisi `.env`: `cd web && docker compose up -d` (agar environment masuk
+ke container php-fpm).
+
+Langkah pakai:
+
+1. **Commerce → Configuration → Midtrans (Snap)** (`/admin/commerce/config/midtrans`)
+   → **Simpan & tes kredensial** (`401` = server key salah, `404`/`200` = valid).
+2. **Commerce → Configuration → Payment → Payment gateways → Add payment gateway**
+   → pilih **Midtrans (Snap)**, tentukan **Mode** (Test = sandbox / Live), mode
+   tampilan (popup Snap.js / redirect), prefix order ID, dsb.
+3. Salin **Notification URL** yang tampil di tab *Configure* gateway
+   (`https://<domain>/payment/notify/<gateway-id>`) ke dashboard Midtrans →
+   **SETTINGS → CONFIGURATION → Payment Notification URL**.
+4. Pastikan checkout flow memuat pane **Payment process**.
+
+Dokumentasi lengkap (pemetaan status → state payment, alur async, void/refund,
+troubleshooting): `web/web/modules/custom/commerce_midtrans/README.md`.
+
+
