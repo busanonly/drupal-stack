@@ -5,25 +5,26 @@
 #     web/       -> Drupal 11 php-fpm + nginx (+ .env, composer project)
 #  Jalankan `make help` untuk daftar perintah.
 # =====================================================================
-NETWORK_NAME := $(shell sed -n 's/^NETWORK_NAME=//p' database/.env 2>/dev/null | head -1)
-NETWORK_NAME := $(if $(strip $(NETWORK_NAME)),$(strip $(NETWORK_NAME)),drupal-network)
-SUBNET       := $(shell sed -n 's/^NETWORK_SUBNET=//p' database/.env 2>/dev/null | head -1)
-SUBNET       := $(if $(strip $(SUBNET)),$(strip $(SUBNET)),172.22.0.0/24)
-WEB_PORT     := $(shell sed -n 's/^NGINX_PORT=//p' web/.env 2>/dev/null | head -1)
-WEB_PORT     := $(if $(strip $(WEB_PORT)),$(strip $(WEB_PORT)),8089)
+# Nilai dari .env dibaca ulang tiap kali dipakai (recursive `=`) supaya
+# perubahan .env — mis. hasil `make init` di run yang sama — langsung terpakai.
+env_get = $(shell sed -n 's/^$(1)=//p' $(2) 2>/dev/null | head -1)
+
+NETWORK_NAME_INFO = $(if $(strip $(call env_get,NETWORK_NAME,database/.env)),$(strip $(call env_get,NETWORK_NAME,database/.env)),drupal-network)
+SUBNET_INFO       = $(if $(strip $(call env_get,NETWORK_SUBNET,database/.env)),$(strip $(call env_get,NETWORK_SUBNET,database/.env)),172.22.0.0/24)
+WEB_PORT_INFO     = $(if $(strip $(call env_get,NGINX_PORT,web/.env)),$(strip $(call env_get,NGINX_PORT,web/.env)),8089)
 
 .DEFAULT_GOAL := help
 
 help: ## Tampilkan daftar perintah
-	@echo "network : $(NETWORK_NAME)    web : http://<host>:$(WEB_PORT)"
+	@echo "network : $(NETWORK_NAME_INFO)    web : http://<host>:$(WEB_PORT_INFO)"
 	@echo ""
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 network: ## Buat network drupal (subnet dari .env) bila belum ada
-	@docker network inspect $(NETWORK_NAME) >/dev/null 2>&1 \
-		|| docker network create --subnet $(SUBNET) $(NETWORK_NAME)
-	@docker network inspect $(NETWORK_NAME) --format 'network {{.Name}} subnet={{range .IPAM.Config}}{{.Subnet}}{{end}} siap'
+	@docker network inspect $(NETWORK_NAME_INFO) >/dev/null 2>&1 \
+		|| docker network create --subnet $(SUBNET_INFO) $(NETWORK_NAME_INFO)
+	@docker network inspect $(NETWORK_NAME_INFO) --format 'network {{.Name}} subnet={{range .IPAM.Config}}{{.Subnet}}{{end}} siap'
 
 env: ## Buat .env di database/ & web/ dari .env.example bila belum ada
 	@test -f database/.env || cp database/.env.example database/.env
@@ -38,11 +39,11 @@ deps: ## Isi dependency untuk clone/project baru: composer install + settings.ph
 	$(MAKE) -C web composer CMD="install --no-interaction"
 	$(MAKE) -C web settings
 
-new: init up deps ## Bootstrap project baru sekali jalan: make new NAME=proyek2
+new: init up deps ## Bootstrap project baru sekali jalan: make new NAME=proyek2 [WEB_PORT=8090 DB_PORT=3307]
 	@echo ""
 	@echo "Project '$(NAME)' siap. Installer Drupal: http://<IP-server>:$$(sed -n 's/^NGINX_PORT=//p' web/.env | head -1)/core/install.php"
 
-up: network env ## Nyalakan database lalu web (detached)
+up: env ## Nyalakan database lalu web (network dibuat oleh masing-masing stack)
 	$(MAKE) -C database up
 	$(MAKE) -C web up
 	@echo "Drupal -> http://<host>:$(WEB_PORT)"

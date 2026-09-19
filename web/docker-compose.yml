@@ -29,13 +29,17 @@ services:
     env_file:
       - .env
     environment:
-      DB_HOST: ${DB_HOST:-mariadb_drupal}
+      DB_HOST: ${DB_HOST:-drupal_db}
       DB_PORT: ${DB_PORT:-3306}
       DB_NAME: ${DB_NAME:-drupal}
       DB_USER: ${DB_USER:-drupal}
       DB_PASSWORD: ${DB_PASSWORD:-drupal_password_anda}
       DRUPAL_HASH_SALT: ${DRUPAL_HASH_SALT:-ubah-salt-ini}
       TZ: ${TZ:-Asia/Jakarta}
+      # Cache dist Composer disimpan di dalam root proyek (bind mount) supaya
+      # `composer install` ulang / di project hasil clone jauh lebih cepat.
+      # Folder ini git-ignored (web/.composer-cache).
+      COMPOSER_CACHE_DIR: ${COMPOSER_CACHE_DIR:-/var/www/html/.composer-cache}
     volumes:
       # seluruh root proyek Drupal (composer.json, vendor/, web/) dari host
       - ./:/var/www/html

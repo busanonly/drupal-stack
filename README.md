@@ -153,9 +153,10 @@ make new NAME=nama_project   # = init + up + deps (lengkap)
 
 atau kalau `.env` sudah ada: `make up` lalu `make deps`.
 
-> Tips: agar `composer install` cepat, simpan cache dist dari project lama
-> (`cp -r <project-lama>/web/.composer-cache web/`) — folder ini git-ignored dan
-> mempercepat instalasi ulang karena dist tidak diunduh lagi.
+> Tips: `composer install` akan cepat bila cache dist sudah ada. Container sudah
+> otomatis memakai `COMPOSER_CACHE_DIR=/var/www/html/.composer-cache`
+> (git-ignored), jadi cukup menyalin cache dari project lama:
+> `cp -r <project-lama>/web/.composer-cache web/`.
 
 ---
 
@@ -218,8 +219,9 @@ make shell                                # masuk container php-fpm
 - **Semua tool PHP/Composer berjalan di container** (host tidak perlu PHP/Composer):
   `make composer CMD="..."` (uid 1000 agar file tetap milik `www`) dan
   `make drush CMD="..."` setelah `composer require drush/drush`.
-  Cache dist Composer disimpan di `web/.composer-cache/` (git-ignored) supaya
-  instalasi ulang cepat.
+  Cache dist Composer otomatis memakai `web/.composer-cache/` (git-ignored) —
+  container menyetel `COMPOSER_CACHE_DIR` — sehingga `composer install` ulang dan
+  bootstrap clone baru jauh lebih cepat (tidak mengunduh dist dari GitHub lagi).
 - **`settings.php`**: `make settings` (di `web/`) membuat
   `web/sites/default/settings.php` dari `default.settings.php` lalu menambahkan
   blok yang membaca `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`,
