@@ -1,0 +1,61 @@
+# Nilai bawaan pengaturan theme blank_theme.
+#
+# Dibaca lewat ThemeSettingsProvider (lihat blank_theme_setting() di
+# blank_theme.theme) dan diubah dari Appearance > Settings. Nilai di sini
+# dipasang saat theme di-install; pada nilai yang sama dengan
+# blank_theme_default_settings() agar tampilan bawaan konsisten.
+header_tagline: 'Boneka Berkualitas untuk Bisnis Anda'
+
+# Satu link per baris: "Label|path". Dipakai hanya bila region Primary menu
+# kosong (tidak ada blok menu yang dipasang di Block layout).
+header_nav_links: |
+  Beranda|<front>
+  Produk|/produk
+  Tentang Kami|/tentang-kami
+  Cara Order|/cara-order
+  Kontak|/kontak
+
+header_search_enabled: true
+header_search_placeholder: 'Cari boneka...'
+header_search_action: '/search/node'
+header_cta_enabled: true
+header_cta_label: 'Hubungi Kami'
+header_cta_url: '/kontak'
+header_whatsapp: ''
+header_sticky: true
+
+# --- Hero halaman depan (templates/hero.html.twig) ---
+# Judul dipecah dua baris: baris pertama gelap, baris kedua warna aksen.
+hero_enabled: true
+hero_front_only: true
+hero_hide_page_title: true
+hero_eyebrow: 'Supplier Boneka Terpercaya'
+hero_title: 'Boneka Berkualitas'
+hero_title_accent: 'untuk Bisnis Anda'
+hero_lead: 'Pusat grosir dan custom boneka dengan kualitas terbaik, harga bersaing, siap mendukung kesuksesan usaha Anda.'
+hero_cta_label: 'Lihat Produk'
+hero_cta_url: '/produk'
+hero_secondary_label: 'Konsultasi WhatsApp'
+hero_secondary_url: '/kontak'
+
+# Satu keunggulan per baris: "Label|ikon". Ikon: shield, truck, paw.
+hero_features: |
+  Kualitas Terjamin|shield
+  Harga Grosir Lebih Hemat|truck
+  Siap untuk Reseller|paw
+
+# Dekorasi sisi kanan (hanya tampil di layar >= 1200px).
+hero_note: |
+  Lebih dari
+  Sekadar Boneka
+  - Kami Dukung
+  Mimpi Usaha Anda
+hero_badge: |
+  Boneka
+  Membawa
+  Kebahagiaan
+  Selalu
+
+# Kosong = pakai gambar bawaan theme (images/hero-boneka.webp).
+hero_image: ''
+

@@ -9,14 +9,30 @@
 
 /* --- variabel desain --- */
 :root {
-  --color-text: #222;
+  /* Palet brand — diambil dari desain header (aksen pink #e55374). */
+  --color-text: #1b1b20;
+  --color-text-muted: #4b4b55;
+  --color-text-soft: #8b8b93;
   --color-bg: #fff;
-  --color-accent: #0b5fff;
-  --color-muted: #f4f4f4;
-  --color-border: #ddd;
+  --color-accent: #e55374;
+  --color-accent-dark: #c93d5c;
+  --color-muted: #f4f4f6;
+  --color-border: #e8e8ee;
+  --radius-pill: 999px;
   --font-base: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --space: 1rem;
   --max-width: 1200px;
+  /* Header boleh sedikit lebih lebar dari konten (brand + menu + search + CTA). */
+  --header-max-width: 1320px;
+
+  /* Hero halaman depan (css/hero.css) — warna disampel dari desain. */
+  --color-hero-bg: #fdf2f4;
+  --color-hero-tint: #fdf3f5;
+  --color-hero-heading: #3c1f2e;
+  --color-hero-text: #5b4a55;
+  /* Font "tulisan tangan" untuk dekorasi hero; tambahkan @font-face Google
+     Fonts (mis. Caveat) lalu ubah variabel ini bila ingin lebih mirip desain. */
+  --font-script: "Segoe Script", "Bradley Hand", "Brush Script MT", "Comic Sans MS", cursive;
 }
 
 /* --- reset ringan --- */
@@ -63,8 +79,6 @@ h3 {
   padding: 0 var(--space);
 }
 
-.site-header,
-.site-nav,
 .site-breadcrumb,
 .site-highlighted,
 .site-help,
@@ -72,15 +86,7 @@ h3 {
   padding: var(--space) 0;
 }
 
-.site-header,
-.site-footer {
-  border-color: var(--color-border);
-}
-
-.site-header {
-  border-bottom: 1px solid var(--color-border);
-}
-
+/* Header situs (bar atas) punya file sendiri: css/header.css. */
 .site-footer {
   border-top: 1px solid var(--color-border);
   margin-top: calc(var(--space) * 2);
@@ -108,8 +114,16 @@ h3 {
 }
 
 /* --- elemen umum --- */
+/* Judul halaman: blok Page title (region page_title) atau variabel `title`. */
+.page-header {
+  padding-top: var(--space);
+}
+
+.page-header h1,
 .page-title {
-  margin-top: 0;
+  margin: 0 0 0.25rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.2;
 }
 
 .page-tabs ul {

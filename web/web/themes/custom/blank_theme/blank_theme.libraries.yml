@@ -1,6 +1,6 @@
 # =====================================================================
 #  Library CSS/JS untuk theme blank_theme.
-#  Library `base` otomatis dimuat di semua halaman (lihat info.yml).
+#  Library `base` & `header` otomatis dimuat di semua halaman (lihat info.yml).
 #  Memuat library lain dari Twig:
 #     {{ attach_library('blank_theme/base') }}
 # =====================================================================
@@ -13,3 +13,24 @@ base:
   #   js/app.js: { attributes: { defer: true } }
   # dependencies:
   #   - core/drupal
+
+# Header situs: gaya bar atas + interaksi tombol menu untuk layar kecil.
+header:
+  version: 1.x
+  css:
+    theme:
+      css/header.css: {}
+  js:
+    js/header.js: { attributes: { defer: true } }
+
+# Hero halaman depan (templates/hero.html.twig → css/hero.css).
+# Tidak dimuat global: dipasang dari template dengan
+#   {{ attach_library('blank_theme/hero') }}
+# sehingga CSS-nya hanya diunduh di halaman yang memang memakai hero.
+hero:
+  version: 1.x
+  css:
+    theme:
+      css/hero.css: {}
+  dependencies:
+    - blank_theme/base

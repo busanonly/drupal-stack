@@ -4,26 +4,38 @@
  * Template halaman utama — theme blank_theme.
  *
  * Region yang tersedia (lihat blank_theme.info.yml):
- * page.header, page.primary_menu, page.breadcrumb, page.highlighted,
- * page.help, page.content, page.sidebar_first, page.footer.
+ * page.header, page.header_search, page.primary_menu, page.breadcrumb,
+ * page.highlighted, page.page_title, page.help, page.content,
+ * page.sidebar_first, page.footer.
+ * page.header, page.header_search, dan page.primary_menu dirender di dalam
+ * templates/header.html.twig (bar atas); page.page_title dirender sebagai
+ * judul halaman (blok Page title).
  *
  * Variabel berguna: title, title_prefix, title_suffix, tabs, messages,
- * is_front, logged_in, is_admin, front_page.
+ * is_front, logged_in, is_admin, front_page, blank_header (lihat
+ * blank_theme.theme).
  */
 #}
+{#
+  Header situs. Sengaja dirender di luar .layout-container supaya bar-nya
+  selebar layar; isi di dalamnya dibatasi oleh .site-header__inner.
+#}
+{% include '@blank_theme/header.html.twig' with {
+  brand: page.header,
+  nav: page.primary_menu,
+  search: page.header_search,
+} %}
+
+{#
+  Hero halaman depan (templates/hero.html.twig) — tepat di bawah header.
+  Sengaja di luar .layout-container agar latar & fotonya selebar layar, sama
+  seperti header. Hero merender dirinya sendiri hanya bila aktif (lihat
+  blank_theme_hero() di blank_theme.theme): pengaturan hero_enabled dan
+  hero_front_only.
+#}
+{% include '@blank_theme/hero.html.twig' %}
+
 <div class="layout-container">
-
-  {% if page.header %}
-    <header class="site-header">
-      {{ page.header }}
-    </header>
-  {% endif %}
-
-  {% if page.primary_menu %}
-    <nav class="site-nav" aria-label="{{ 'Main navigation'|t }}">
-      {{ page.primary_menu }}
-    </nav>
-  {% endif %}
 
   {% if page.breadcrumb %}
     <div class="site-breadcrumb">
@@ -43,17 +55,29 @@
     </div>
   {% endif %}
 
+  {# Judul halaman: dari blok Page title (region page_title). Variabel `title`
+     dipakai sebagai cadangan bila blok itu dilepas dari Block layout.
+     Di halaman depan yang memakai hero, judul ini disembunyikan karena hero
+     sudah membawa <h1> (pengaturan hero_hide_page_title; nilai dihitung di
+     blank_theme_preprocess_page()). #}
+  {% set hide_page_title = blank_hide_page_title|default(false) %}
+  {{ title_prefix }}
+  {% if not hide_page_title %}
+    {% if page.page_title %}
+      <div class="page-header">
+        {{ page.page_title }}
+      </div>
+    {% elseif title %}
+      <h1 class="page-title">{{ title }}</h1>
+    {% endif %}
+  {% endif %}
+  {{ title_suffix }}
+
   {% set has_sidebar = page.sidebar_first is not empty %}
   <main id="main-content" class="layout-main{{ has_sidebar ? ' has-sidebar' }}">
     <div class="layout-content">
 
       {{ messages }}
-
-      {{ title_prefix }}
-      {% if title %}
-        <h1 class="page-title">{{ title }}</h1>
-      {% endif %}
-      {{ title_suffix }}
 
       {% if tabs %}
         <nav class="page-tabs">

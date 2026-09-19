@@ -1,0 +1,355 @@
+/* =====================================================================
+ *  hero.css — hero halaman depan (theme blank_theme)
+ *
+ *  Struktur markup: templates/hero.html.twig, dirender page.html.twig tepat
+ *  di bawah header. Library `blank_theme/hero` dipasang dari Twig dengan
+ *  attach_library(), jadi CSS ini hanya dimuat di halaman yang memakai hero.
+ *
+ *    .hero
+ *      .hero::before      → kabut pink + highlight di atas foto (teks di kiri
+ *                           tetap terbaca, sisi kanan tetap memperlihatkan foto)
+ *      img.hero__media    → foto boneka (images/hero-boneka.webp)
+ *      .hero__inner
+ *        .hero__content
+ *          .hero__eyebrow      → label kecil di atas judul
+ *          .hero__title        → judul (baris 1 gelap, baris 2 warna aksen)
+ *          .hero__lead         → paragraf pembuka
+ *          .hero__actions
+ *            .hero__button--primary  "Lihat Produk →"
+ *            .hero__button--ghost    "Konsultasi WhatsApp"
+ *          .hero__features
+ *            .hero-feature (ikon + label)
+ *        .hero__note           → tulisan tangan (dekorasi, ≥ 1200px)
+ *        .hero__badge          → bulatan pink (dekorasi, ≥ 1200px)
+ *
+ *  Warna & font memakai variabel di css/base.css.
+ * ===================================================================== */
+
+.hero {
+  /* --- ukuran hero: ubah di sini bila ingin lebih tinggi/pendek --- */
+  --hero-height: clamp(420px, 37vw, 600px);  /* tinggi minimum hero */
+  --hero-content: 38rem;                     /* lebar maksimum kolom teks (judul + tombol) */
+  --hero-media: 66%;                         /* lebar bidang foto (relatif hero) */
+  --hero-media-max: 1150px;                  /* batas lebar bidang foto di layar lebar */
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  min-height: var(--hero-height);
+  background-color: var(--color-hero-bg);
+}
+
+/* --- kabut pink di atas foto: teks kiri terbaca, foto kanan tetap terlihat --- */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-image:
+    /* hangat di kanan bawah (mengikuti desain) */
+    radial-gradient(80% 90% at 96% 104%, rgb(240 198 188 / 32%) 0%, rgb(240 198 188 / 0%) 62%),
+    /* pink pekat di kiri → bening di kanan */
+    linear-gradient(90deg, rgb(253 242 245 / 94%) 0%, rgb(253 242 245 / 78%) 22%, rgb(253 242 245 / 30%) 44%, rgb(253 242 245 / 0%) 62%),
+    /* highlight tipis di bagian atas */
+    linear-gradient(180deg, rgb(255 255 255 / 40%) 0%, rgb(255 255 255 / 0%) 32%);
+}
+
+/* --- foto boneka: tinggi = tinggi hero, menempel di kanan --- */
+.hero__media {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  width: min(var(--hero-media), var(--hero-media-max));
+  height: 100%;
+  object-fit: cover;
+  /* Crop sedikit dari atas: sisa bingkai foto di kanan atas ikut terbuang. */
+  object-position: 100% 74%;
+  /* Tepi kiri foto dibuat memudar. Bila browser tidak mendukung mask, tepinya
+     tetap aman karena bertemu dinding pink yang senada dengan latar hero. */
+  -webkit-mask-image: linear-gradient(90deg, rgb(0 0 0 / 0) 0%, #000 24%);
+  mask-image: linear-gradient(90deg, rgb(0 0 0 / 0) 0%, #000 24%);
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: var(--header-max-width);
+  margin: 0 auto;
+  padding: clamp(2.5rem, 4.5vw, 4rem) var(--space);
+}
+
+.hero__content {
+  max-width: var(--hero-content);
+}
+
+/* --- label kecil di atas judul --- */
+.hero__eyebrow {
+  display: inline-block;
+  margin: 0 0 clamp(0.9rem, 1.6vw, 1.25rem);
+  padding: 0.42rem 0.95rem;
+  border: 1px solid rgb(229 83 116 / 28%);
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 72%);
+  color: var(--color-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+/* --- judul: baris pertama gelap, baris kedua aksen --- */
+.hero__title {
+  margin: 0 0 clamp(0.75rem, 1.4vw, 1rem);
+  color: var(--color-hero-heading);
+  font-size: clamp(1.95rem, 3.6vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.hero__title-accent {
+  display: block;
+  color: var(--color-accent);
+}
+
+/* --- paragraf pembuka --- */
+.hero__lead {
+  max-width: 32rem;
+  margin: 0 0 clamp(1.25rem, 2.2vw, 1.75rem);
+  color: var(--color-hero-text);
+  font-size: clamp(1rem, 1.05vw, 1.075rem);
+  line-height: 1.6;
+}
+
+/* --- tombol --- */
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.hero__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.5rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.hero__button-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.hero__button--primary {
+  background-image: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%);
+  color: #fff;
+  box-shadow: 0 10px 24px rgb(229 83 116 / 26%);
+}
+
+.hero__button--primary:hover,
+.hero__button--primary:focus {
+  color: #fff;
+  box-shadow: 0 14px 28px rgb(229 83 116 / 32%);
+  transform: translateY(-1px);
+}
+
+.hero__button--ghost {
+  background: rgb(255 255 255 / 88%);
+  border-color: rgb(229 83 116 / 35%);
+  color: var(--color-accent);
+}
+
+.hero__button--ghost:hover,
+.hero__button--ghost:focus {
+  background: #fff;
+  border-color: var(--color-accent);
+  transform: translateY(-1px);
+}
+
+.hero__button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* --- daftar keunggulan di bawah tombol --- */
+.hero__features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(0.85rem, 2.4vw, 2.25rem);
+  margin: clamp(1.5rem, 3vw, 2.25rem) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hero-feature__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--color-accent);
+}
+
+.hero-feature__icon svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.hero-feature__label {
+  max-width: 8.5rem;
+  color: var(--color-hero-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.28;
+}
+
+/* --- dekorasi: tulisan tangan di sisi kanan (mengikuti desain) --- */
+.hero__note {
+  position: absolute;
+  top: 10%;
+  left: 52%;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  color: var(--color-accent);
+  font-family: var(--font-script);
+  font-size: clamp(1.15rem, 1.5vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.3;
+  transform: rotate(-6deg);
+  transform-origin: left top;
+}
+
+.hero__note-heart {
+  display: inline-flex;
+  margin-top: 0.4rem;
+}
+
+.hero__note-heart svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/* --- dekorasi: bulatan pink di kanan bawah --- */
+.hero__badge {
+  position: absolute;
+  right: clamp(1.5rem, 12%, 9rem);
+  bottom: clamp(1.25rem, 9%, 3.5rem);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  width: clamp(6.5rem, 8.5vw, 9rem);
+  aspect-ratio: 1;
+  padding: 0.6rem;
+  border-radius: 50%;
+  background: rgb(252 197 209 / 92%);
+  color: var(--color-accent-dark);
+  font-size: clamp(0.68rem, 0.8vw, 0.82rem);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  transform: rotate(-7deg);
+  box-shadow: 0 12px 26px rgb(229 83 116 / 20%);
+}
+
+.hero__badge-heart {
+  display: inline-flex;
+  margin-top: 0.15rem;
+}
+
+.hero__badge-heart svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+/* --- layar sedang: dekorasi disembunyikan agar tidak menutupi foto --- */
+@media (max-width: 1199px) {
+  .hero__note,
+  .hero__badge {
+    display: none;
+  }
+}
+
+/* --- tablet & ponsel: teks di atas, foto jadi pita di bagian bawah --- */
+@media (max-width: 1023px) {
+  .hero {
+    align-items: flex-start;
+    /* Ruang untuk foto di bagian bawah hero. */
+    padding-bottom: clamp(6rem, 30vw, 12rem);
+  }
+
+  .hero__media {
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    height: clamp(8rem, 34vw, 15rem);
+    /* Tampilkan dari tepi atas foto: bagian yang memudar hanya dinding pink,
+       kepala beruang tetap utuh (lihat mask di bawah). */
+    object-position: 76% 0%;
+    -webkit-mask-image: linear-gradient(180deg, rgb(0 0 0 / 0) 0%, #000 30%);
+    mask-image: linear-gradient(180deg, rgb(0 0 0 / 0) 0%, #000 30%);
+  }
+
+  .hero::before {
+    background-image:
+      /* pink pekat di atas (teks) → bening di bawah (foto) */
+      linear-gradient(180deg, rgb(253 242 245) 0%, rgb(253 242 245) 52%, rgb(253 242 245 / 45%) 76%, rgb(253 242 245 / 0%) 100%),
+      linear-gradient(180deg, rgb(255 255 255 / 35%) 0%, rgb(255 255 255 / 0%) 30%);
+  }
+}
+
+/* --- ponsel: tombol melebar, judul lebih rapat --- */
+@media (max-width: 640px) {
+  .hero {
+    min-height: 0;
+    padding-bottom: clamp(5rem, 46vw, 9rem);
+  }
+
+  .hero__title {
+    font-size: clamp(1.85rem, 8.5vw, 2.4rem);
+  }
+
+  .hero__actions .hero__button {
+    flex: 1 1 auto;
+  }
+
+  .hero__features {
+    gap: 0.85rem 1.25rem;
+  }
+
+  .hero__media {
+    height: clamp(8rem, 44vw, 12rem);
+    object-position: 78% 10%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .hero * {
+    transition-duration: 0.01ms !important;
+  }
+}

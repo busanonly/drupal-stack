@@ -1,0 +1,83 @@
+# Schema untuk config `blank_theme.settings` (theme blank_theme).
+# Tipe induk `theme_settings` disediakan core: core/config/schema/core.data_types.schema.yml
+blank_theme.settings:
+  type: theme_settings
+  label: 'Blank Theme settings'
+  mapping:
+    header_tagline:
+      type: string
+      label: 'Tagline di bawah nama situs'
+    header_nav_links:
+      type: string
+      label: 'Menu bawaan theme (satu "Label|path" per baris)'
+    header_search_enabled:
+      type: boolean
+      label: 'Tampilkan form pencarian bawaan'
+    header_search_placeholder:
+      type: string
+      label: 'Placeholder kotak pencarian'
+    header_search_action:
+      type: string
+      label: 'Tujuan form pencarian'
+    header_cta_enabled:
+      type: boolean
+      label: 'Tampilkan tombol CTA'
+    header_cta_label:
+      type: string
+      label: 'Label tombol CTA'
+    header_cta_url:
+      type: string
+      label: 'Tujuan tombol CTA (dipakai bila nomor WhatsApp kosong)'
+    header_whatsapp:
+      type: string
+      label: 'Nomor WhatsApp (format internasional, tanpa +)'
+    header_sticky:
+      type: boolean
+      label: 'Header menempel di atas saat scroll'
+
+    # --- Hero halaman depan (templates/hero.html.twig) ---
+    hero_enabled:
+      type: boolean
+      label: 'Tampilkan hero'
+    hero_front_only:
+      type: boolean
+      label: 'Hero hanya tampil di halaman depan'
+    hero_hide_page_title:
+      type: boolean
+      label: 'Sembunyikan judul halaman di halaman depan'
+    hero_eyebrow:
+      type: string
+      label: 'Label kecil di atas judul hero'
+    hero_title:
+      type: string
+      label: 'Judul hero — baris pertama'
+    hero_title_accent:
+      type: string
+      label: 'Judul hero — baris kedua (warna aksen)'
+    hero_lead:
+      type: string
+      label: 'Paragraf pembuka hero'
+    hero_cta_label:
+      type: string
+      label: 'Label tombol utama hero'
+    hero_cta_url:
+      type: string
+      label: 'Tujuan tombol utama hero'
+    hero_secondary_label:
+      type: string
+      label: 'Label tombol kedua hero (WhatsApp)'
+    hero_secondary_url:
+      type: string
+      label: 'Tujuan tombol kedua hero'
+    hero_features:
+      type: string
+      label: 'Daftar keunggulan hero (satu "Label|ikon" per baris)'
+    hero_note:
+      type: string
+      label: 'Tulisan tangan dekoratif di sisi kanan hero (satu baris per baris)'
+    hero_badge:
+      type: string
+      label: 'Teks bulatan pink dekoratif hero'
+    hero_image:
+      type: string
+      label: 'Foto hero (path/URL; kosong = gambar bawaan theme)'

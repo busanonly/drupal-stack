@@ -1,0 +1,394 @@
+/* =====================================================================
+ *  header.css — bar atas situs (theme blank_theme)
+ *
+ *  Struktur markup: templates/header.html.twig
+ *    .site-header
+ *      .site-header__inner
+ *        .site-header__brand   → blok Site branding (templates/block--system-branding-block.html.twig)
+ *        .site-header__toggle  → tombol menu (hanya < 1200px, dikontrol js/header.js)
+ *        .site-header__panel
+ *          .site-header__nav    → region Primary menu
+ *          .site-header__search → region Header search / form bawaan
+ *          .site-header__cta    → tombol "Hubungi Kami"
+ *
+ *  Warna & radius mengikuti variabel di css/base.css.
+ * ===================================================================== */
+
+/* --- kerangka bar --- */
+.site-header {
+  position: relative;
+  z-index: 20;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.site-header--sticky {
+  position: sticky;
+  top: 0;
+}
+
+/* Admin toolbar: header sticky diturunkan sebesar tinggi toolbar. */
+.toolbar-fixed .site-header--sticky,
+.toolbar-horizontal .site-header--sticky {
+  top: var(--drupal-displace-offset-top, 0);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.9rem, 2vw, 1.75rem);
+  max-width: var(--header-max-width);
+  min-height: 76px;
+  margin: 0 auto;
+  padding: 0.5rem var(--space);
+}
+
+.site-header__brand {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+/* --- brand (blok Site branding) --- */
+.site-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.site-brand__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg);
+  box-shadow: 0 1px 2px rgb(27 27 32 / 6%);
+}
+
+.site-brand__logo img {
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+
+.site-brand__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.site-brand__name {
+  color: var(--color-text);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-brand__name-accent {
+  color: var(--color-accent);
+}
+
+.site-brand__tagline {
+  margin-top: 3px;
+  color: var(--color-text-soft);
+  font-size: 0.78rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- menu (region Primary menu / menu bawaan theme) --- */
+.site-header__panel {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  gap: clamp(0.9rem, 1.8vw, 1.75rem);
+  min-width: 0;
+}
+
+.site-header__nav {
+  display: flex;
+  align-items: center;
+}
+
+.site-header__nav ul {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.85rem, 1.5vw, 1.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-header__nav li {
+  margin: 0;
+}
+
+.site-header__nav a {
+  position: relative;
+  display: inline-block;
+  padding: 0.3rem 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-header__nav a:hover,
+.site-header__nav a:focus {
+  color: var(--color-accent);
+}
+
+.site-header__nav a.is-active {
+  color: var(--color-accent);
+}
+
+.site-header__nav a.is-active::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -0.4rem;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--color-accent);
+}
+
+.site-header__nav a:focus-visible,
+.site-brand__logo:focus-visible,
+.site-brand__name:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* --- pencarian --- */
+.site-header__search {
+  display: flex;
+  align-items: center;
+  margin-inline-start: auto;
+}
+
+.header-search {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: clamp(170px, 14vw, 215px);
+  height: 44px;
+  padding: 0 0.4rem 0 1.1rem;
+  border-radius: var(--radius-pill);
+  background: #f2f2f5;
+}
+
+.header-search:focus-within {
+  box-shadow: 0 0 0 2px rgb(229 83 116 / 35%);
+}
+
+.header-search__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
+.header-search__input:focus {
+  outline: none;
+}
+
+.header-search__input::placeholder {
+  color: #a8a8b2;
+}
+
+.header-search__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.header-search__submit:hover {
+  color: var(--color-accent);
+}
+
+/* --- tombol CTA --- */
+.site-header__cta {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.header-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 1.15rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px rgb(229 83 116 / 28%);
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.header-cta:hover,
+.header-cta:focus {
+  background: var(--color-accent-dark);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.header-cta__icon {
+  display: inline-flex;
+}
+
+.header-cta__icon svg {
+  display: block;
+}
+
+.header-cta:focus-visible,
+.header-search__submit:focus-visible,
+.site-header__toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* --- tombol menu (layar kecil) --- */
+.site-header__toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  margin-inline-start: auto;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.site-header__toggle-bar {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-text);
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.site-header[data-open="true"] .site-header__toggle-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.site-header[data-open="true"] .site-header__toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.site-header[data-open="true"] .site-header__toggle-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* --- layar kecil: panel menurun di bawah bar ---
+   Di bawah 1200px brand + menu + pencarian + CTA tidak lagi muat sejajar, jadi
+   menu diganti tombol hamburger (dikontrol js/header.js). */
+@media (max-width: 1199px) {
+  .site-header__inner {
+    min-height: 68px;
+    gap: 0.75rem;
+  }
+
+  .site-header__toggle {
+    display: flex;
+  }
+
+  .site-header__panel {
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    max-height: calc(100vh - 68px);
+    overflow-y: auto;
+    padding: 1rem var(--space) 1.5rem;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 18px 32px rgb(27 27 32 / 8%);
+  }
+
+  .site-header[data-open="true"] .site-header__panel {
+    display: flex;
+  }
+
+  .site-header__nav ul {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .site-header__nav a {
+    display: block;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 1rem;
+  }
+
+  .site-header__nav a.is-active::after {
+    display: none;
+  }
+
+  .site-header__search {
+    margin-inline-start: 0;
+  }
+
+  .header-search {
+    width: 100%;
+  }
+
+  .site-header__cta,
+  .header-cta {
+    width: 100%;
+  }
+
+  /* Kunci scroll halaman saat menu mobile terbuka.
+     Cukup pada elemen <html> (+ `height: 100%` agar tinggi root = viewport).
+     Jangan tambahkan `overflow: hidden` pada <body>: tinggi body ikut menyusut
+     ke tinggi konten sehingga panel (pencarian & CTA) terpotong. */
+  html.site-header-menu-open {
+    overflow: hidden;
+    height: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header,
+  .site-header * {
+    transition-duration: 0.01ms !important;
+  }
+}
+

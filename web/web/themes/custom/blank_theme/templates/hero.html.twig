@@ -1,0 +1,112 @@
+{#
+/**
+ * @file
+ * Hero halaman depan — theme blank_theme.
+ *
+ * Dirender dari page.html.twig tepat di bawah header (lihat catatan di
+ * templates/page.html.twig). Semua teks & tautan diambil dari pengaturan theme
+ * (Appearance > Settings → Hero), jadi tidak ada teks yang ditulis di sini —
+ * hanya ikon SVG.
+ *
+ * Variabel dari blank_theme_hero() (lihat blank_theme.theme):
+ * - enabled      : hero boleh dirender atau tidak (hero_enabled &
+ *                  hero_front_only).
+ * - eyebrow      : label kecil di atas judul.
+ * - title        : baris pertama judul (warna gelap).
+ * - title_accent : baris kedua judul (warna aksen).
+ * - lead         : paragraf pembuka.
+ * - cta          : { label, href } tombol utama.
+ * - secondary    : { label, href, external } tombol WhatsApp/kontak.
+ * - features     : [{ label, icon }] keunggulan; icon: shield/truck/paw.
+ * - note         : [baris] tulisan tangan di sisi kanan (dekorasi).
+ * - badge        : [baris] teks bulatan pink (dekorasi).
+ * - image        : URL foto hero (bawaan: images/hero-boneka.webp, atau
+ *                  hero_image dari pengaturan theme).
+ * - hide_title   : sembunyikan judul halaman (dipakai page.html.twig).
+ */
+#}
+{% set hero = blank_hero|default({'enabled': false}) %}
+
+{% if hero.enabled %}
+  {{ attach_library('blank_theme/hero') }}
+
+  {# Ikon inline — satu tempat untuk semua ikon hero. #}
+  {% set hero_icons = {
+    shield: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>',
+    truck: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M20 8h-3V4H3a2 2 0 0 0-2 2v11h2a3 3 0 0 0 6 0h6a3 3 0 0 0 6 0h2v-5l-3-4zM6 18.5A1.5 1.5 0 0 1 7.5 17 1.5 1.5 0 0 1 9 18.5 1.5 1.5 0 0 1 7.5 20 1.5 1.5 0 0 1 6 18.5zm12 0a1.5 1.5 0 0 1-1.5 1.5 1.5 1.5 0 0 1-1.5-1.5 1.5 1.5 0 0 1 1.5-1.5 1.5 1.5 0 0 1 1.5 1.5zM17 12V9.5h2.5l2 2.5H17z"/></svg>',
+    paw: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><ellipse cx="7" cy="9" rx="2.4" ry="3"/><ellipse cx="12" cy="7" rx="2.4" ry="3"/><ellipse cx="17" cy="9" rx="2.4" ry="3"/><ellipse cx="12" cy="16.6" rx="5.4" ry="4.2"/></svg>',
+  } %}
+  {% set hero_arrow = '<svg class="hero__button-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 11h12.17l-5.59-5.59L12 4l8 8-8 8-1.41-1.41L16.17 13H4z"/></svg>' %}
+  {% set hero_whatsapp = '<svg class="hero__button-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.966 1.164-.198.199-.396.223-.693.075-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.347-.347.52-.52.174-.174.232-.298.347-.497.116-.198.058-.371-.058-.52-.115-.148-.66-1.585-.904-2.16-.235-.56-.472-.482-.65-.49l-.557-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.263.489 1.694.625.712.227 1.36.195 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884a9.82 9.82 0 016.988 2.896 9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' %}
+  {% set hero_heart = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>' %}
+
+  <section class="hero">
+    {# Foto boneka. alt="" → murni dekorasi; pesan utama dibawa judul & teks. #}
+    <img class="hero__media" src="{{ hero.image }}" alt="" width="1276" height="734" fetchpriority="high" />
+
+    <div class="hero__inner">
+      <div class="hero__content">
+
+        {% if hero.eyebrow %}
+          <p class="hero__eyebrow">{{ hero.eyebrow }}</p>
+        {% endif %}
+
+        <h1 class="hero__title">
+          {{ hero.title }}
+          {% if hero.title_accent %}
+            <span class="hero__title-accent">{{ hero.title_accent }}</span>
+          {% endif %}
+        </h1>
+
+        {% if hero.lead %}
+          <p class="hero__lead">{{ hero.lead }}</p>
+        {% endif %}
+
+        {% if hero.cta.label or hero.secondary.label %}
+          <div class="hero__actions">
+            {% if hero.cta.label %}
+              <a class="hero__button hero__button--primary" href="{{ hero.cta.href }}">
+                <span class="hero__button-label">{{ hero.cta.label }}</span>
+                {{ hero_arrow|raw }}
+              </a>
+            {% endif %}
+            {% if hero.secondary.label %}
+              <a class="hero__button hero__button--ghost" href="{{ hero.secondary.href }}"{% if hero.secondary.external %} target="_blank" rel="noopener noreferrer"{% endif %}>
+                {{ hero_whatsapp|raw }}
+                <span class="hero__button-label">{{ hero.secondary.label }}</span>
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if hero.features %}
+          <ul class="hero__features">
+            {% for feature in hero.features %}
+              <li class="hero-feature">
+                <span class="hero-feature__icon" aria-hidden="true">{{ hero_icons[feature.icon]|default(hero_icons.shield)|raw }}</span>
+                <span class="hero-feature__label">{{ feature.label }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+      </div>
+
+      {# Dekorasi mengikuti desain: tulisan tangan + bulatan pink di sisi kanan. #}
+      {% if hero.note %}
+        <p class="hero__note">
+          {% for line in hero.note %}<span class="hero__note-line">{{ line }}</span>{% endfor %}
+          <span class="hero__note-heart" aria-hidden="true">{{ hero_heart|raw }}</span>
+        </p>
+      {% endif %}
+
+      {% if hero.badge %}
+        <p class="hero__badge">
+          {% for line in hero.badge %}<span class="hero__badge-line">{{ line }}</span>{% endfor %}
+          <span class="hero__badge-heart" aria-hidden="true">{{ hero_heart|raw }}</span>
+        </p>
+      {% endif %}
+
+    </div>
+  </section>
+{% endif %}

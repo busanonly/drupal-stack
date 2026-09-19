@@ -11,16 +11,26 @@ package: Custom
 core_version_requirement: ^11
 # false = tidak mewarisi theme apa pun; seluruh markup diatur theme ini.
 base theme: false
+# Logo bawaan theme (dipakai blok Site branding saat "Use the theme logo" aktif).
+logo: logo.svg
 # Library yang dimuat di SEMUA halaman (lihat blank_theme.libraries.yml).
 libraries:
   - blank_theme/base
+  # Header situs: css/header.css + js/header.js (templates/header.html.twig).
+  - blank_theme/header
 # Region yang bisa diisi blok lewat UI Appearance > Block layout.
 # Posisi render tiap region diatur di templates/page.html.twig.
 regions:
+  # Bar atas (templates/header.html.twig): brand diisi blok Site branding.
   header: Header
+  # Slot pencarian di bar atas; bila kosong dipakai form pencarian bawaan theme.
+  header_search: 'Header search'
+  # Menu utama di bar atas (blok Main navigation).
   primary_menu: 'Primary menu'
   breadcrumb: Breadcrumb
   highlighted: Highlighted
+  # Judul halaman (blok Page title) — dirender tepat di atas konten.
+  page_title: 'Page title'
   help: Help
   content: Content
   sidebar_first: 'Sidebar first'

@@ -1,0 +1,35 @@
+{#
+/**
+ * @file
+ * Blok Site branding — theme blank_theme.
+ *
+ * Menghasilkan wordmark seperti pada desain: kata pertama nama situs berwarna
+ * gelap dan sisanya memakai warna aksen (pink), tanpa spasi di antaranya
+ * ("SUPPLIER" + "NONEKA" → "SUPPLIERNONEKA"), dengan tagline di bawahnya.
+ *
+ * Variabel:
+ * - site_logo     : logo (theme settings → logo.svg).
+ * - site_name     : nama situs (Site information), dipecah jadi 2 bagian.
+ * - site_slogan   : slogan situs (Site information).
+ * - blank_tagline : tagline dari pengaturan theme bila slogan kosong
+ *                   (lihat blank_theme_preprocess_block__system_branding_block).
+ */
+#}
+{% set name_parts = site_name|default('')|trim|split(' ') %}
+{% set name_first = name_parts|first|default('') %}
+{% set name_rest = name_parts|length > 1 ? name_parts|slice(1)|join(' ') : '' %}
+<div class="site-brand">
+  {% if site_logo %}
+    <a class="site-brand__logo" href="{{ path('<front>') }}" rel="home">
+      <img src="{{ site_logo }}" alt="{{ site_name }}" width="44" height="44" />
+    </a>
+  {% endif %}
+  <span class="site-brand__text">
+    {% if site_name %}
+      <a class="site-brand__name" href="{{ path('<front>') }}" rel="home">{{ name_first|upper }}{% if name_rest %}<span class="site-brand__name-accent">{{ name_rest|upper }}</span>{% endif %}</a>
+    {% endif %}
+    {% if blank_tagline %}
+      <span class="site-brand__tagline">{{ blank_tagline }}</span>
+    {% endif %}
+  </span>
+</div>

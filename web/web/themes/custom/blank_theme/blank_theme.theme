@@ -10,43 +10,486 @@
  * Contoh-contoh di bawah sengaja dikomentari — hapus komentar bila dipakai.
  */
 
-// use Drupal\Core\Form\FormStateInterface;
-// use Drupal\Core\Template\Attribute;
+use Drupal\Core\Extension\ThemeSettingsProvider;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 
 /**
- * Menambah variabel/class khusus untuk html.html.twig.
+ * Nilai bawaan pengaturan theme.
+ *
+ * Dipakai bila key belum ada di config `blank_theme.settings` (mis. theme baru
+ * dipasang dan form pengaturan belum pernah disimpan). Key yang sama juga
+ * tersedia di config/install/blank_theme.settings.yml untuk instalasi baru.
+ */
+function blank_theme_default_settings() {
+  return [
+    'header_tagline' => 'Boneka Berkualitas untuk Bisnis Anda',
+    // Satu link per baris: "Label|path". Dipakai hanya bila region Primary
+    // menu kosong (tidak ada blok menu yang dipasang).
+    'header_nav_links' => "Beranda|<front>\nProduk|/produk\nTentang Kami|/tentang-kami\nCara Order|/cara-order\nKontak|/kontak",
+    'header_search_enabled' => TRUE,
+    'header_search_placeholder' => 'Cari boneka...',
+    'header_search_action' => '/search/node',
+    'header_cta_enabled' => TRUE,
+    'header_cta_label' => 'Hubungi Kami',
+    'header_cta_url' => '/kontak',
+    'header_whatsapp' => '',
+    'header_sticky' => TRUE,
+    // --- Hero halaman depan (templates/hero.html.twig) ---
+    'hero_enabled' => TRUE,
+    // Hero hanya tampil di halaman depan (<front>).
+    'hero_front_only' => TRUE,
+    'hero_eyebrow' => 'Supplier Boneka Terpercaya',
+    // Judul dipecah dua baris: baris pertama gelap, baris kedua warna aksen.
+    'hero_title' => 'Boneka Berkualitas',
+    'hero_title_accent' => 'untuk Bisnis Anda',
+    'hero_lead' => 'Pusat grosir dan custom boneka dengan kualitas terbaik, harga bersaing, siap mendukung kesuksesan usaha Anda.',
+    'hero_cta_label' => 'Lihat Produk',
+    'hero_cta_url' => '/produk',
+    'hero_secondary_label' => 'Konsultasi WhatsApp',
+    'hero_secondary_url' => '/kontak',
+    // Satu keunggulan per baris: "Label|ikon". Ikon yang tersedia: shield,
+    // truck, paw (lihat map hero_icons di templates/hero.html.twig).
+    'hero_features' => "Kualitas Terjamin|shield\nHarga Grosir Lebih Hemat|truck\nSiap untuk Reseller|paw",
+    // Dekorasi sisi kanan (mengikuti desain): satu baris = satu baris tulisan.
+    'hero_note' => "Lebih dari\nSekadar Boneka\n- Kami Dukung\nMimpi Usaha Anda",
+    'hero_badge' => "Boneka\nMembawa\nKebahagiaan\nSelalu",
+    // Kosong = pakai gambar bawaan theme (images/hero-boneka.webp).
+    'hero_image' => '',
+    // Sembunyikan judul halaman di halaman depan saat hero tampil (hero sudah
+    // membawa <h1>, jadi blok Page title tidak perlu dirender lagi).
+    'hero_hide_page_title' => TRUE,
+  ];
+}
+
+/**
+ * Ambil satu pengaturan theme; jatuh ke nilai bawaan bila belum diisi.
+ *
+ * @param string $name
+ *   Nama key pengaturan (tanpa prefix theme).
+ *
+ * @return mixed
+ *   Nilai pengaturan atau nilai bawaan.
+ */
+function blank_theme_setting($name) {
+  $value = \Drupal::service(ThemeSettingsProvider::class)->getSetting($name, 'blank_theme');
+  if ($value === NULL || $value === '') {
+    $defaults = blank_theme_default_settings();
+    return $defaults[$name] ?? NULL;
+  }
+  return $value;
+}
+
+/**
+ * Ubah path menjadi URL siap pakai di atribut href.
+ *
+ * @param string $path
+ *   Path internal ("/produk", "<front>"), URL absolut, atau anchor ("#kontak").
+ *
+ * @return string
+ *   URL (sudah memperhitungkan base path bila perlu).
+ */
+function blank_theme_link_url($path) {
+  $path = (string) $path;
+  if ($path === '<front>') {
+    return Url::fromRoute('<front>')->toString();
+  }
+  if ($path === '' || $path[0] === '#' || preg_match('#^[a-z][a-z0-9+.-]*://#i', $path)) {
+    return $path;
+  }
+  return Url::fromUri('internal:' . $path, ['absolute' => FALSE])->toString();
+}
+
+/**
+ * Susun variabel header untuk templates/header.html.twig.
+ *
+ * @return array
+ *   Array berisi sticky, nav (link bawaan), search, dan cta.
+ */
+function blank_theme_header() {
+  // --- Link menu bawaan (fallback bila region Primary menu kosong) ---
+  $nav = [];
+  $front = \Drupal::service('path.matcher')->isFrontPage();
+  $current_path = \Drupal::request()->getPathInfo();
+  $lines = preg_split('/\r\n|\r|\n/', (string) blank_theme_setting('header_nav_links')) ?: [];
+  foreach ($lines as $line) {
+    $line = trim($line);
+    if ($line === '') {
+      continue;
+    }
+    [$label, $path] = array_pad(explode('|', $line, 2), 2, '/');
+    $label = trim($label);
+    $path = trim($path) === '' ? '/' : trim($path);
+    if ($label === '') {
+      continue;
+    }
+    if ($path === '<front>') {
+      $active = $front;
+    }
+    elseif ($path[0] === '#' || preg_match('#^[a-z][a-z0-9+.-]*://#i', $path)) {
+      $active = FALSE;
+    }
+    else {
+      $active = $current_path === $path || str_starts_with($current_path, rtrim($path, '/') . '/');
+    }
+    $nav[] = [
+      'label' => $label,
+      'href' => blank_theme_link_url($path),
+      'active' => $active,
+    ];
+  }
+
+  // --- Kotak pencarian bawaan (parameter "keys" dipakai modul Search core) ---
+  $search = [
+    'enabled' => (bool) blank_theme_setting('header_search_enabled'),
+    'action' => blank_theme_link_url((string) blank_theme_setting('header_search_action')),
+    'placeholder' => (string) blank_theme_setting('header_search_placeholder'),
+  ];
+
+  // --- Tombol CTA: wa.me bila nomor WhatsApp diisi, selain itu link biasa ---
+  $whatsapp = preg_replace('/\D+/', '', (string) blank_theme_setting('header_whatsapp'));
+  $cta = [
+    'enabled' => (bool) blank_theme_setting('header_cta_enabled'),
+    'label' => (string) blank_theme_setting('header_cta_label'),
+    'url' => $whatsapp !== ''
+      ? 'https://wa.me/' . $whatsapp
+      : blank_theme_link_url((string) blank_theme_setting('header_cta_url')),
+    'external' => $whatsapp !== '',
+  ];
+
+  return [
+    'sticky' => (bool) blank_theme_setting('header_sticky'),
+    'nav' => $nav,
+    'search' => $search,
+    'cta' => $cta,
+  ];
+}
+
+/**
+ * Pecah pengaturan teks banyak baris menjadi daftar baris yang terisi.
+ *
+ * @param string $value
+ *   Teks dengan pemisah baris (\n, \r\n, atau \r).
+ *
+ * @return array
+ *   Daftar baris; spasi di ujung dibuang dan baris kosong diabaikan.
+ */
+function blank_theme_lines($value) {
+  $lines = preg_split('/\r\n|\r|\n/', (string) $value) ?: [];
+  $out = [];
+  foreach ($lines as $line) {
+    $line = trim($line);
+    if ($line !== '') {
+      $out[] = $line;
+    }
+  }
+  return $out;
+}
+
+/**
+ * Susun variabel hero untuk templates/hero.html.twig.
+ *
+ * @return array
+ *   Array berisi enabled, eyebrow, title, title_accent, lead, cta, secondary,
+ *   features, note, badge, image, dan hide_title.
+ */
+function blank_theme_hero() {
+  // --- Keunggulan: "Label|ikon" per baris. Ikon dibatasi daftar yang ada di
+  //     templates/hero.html.twig (map hero_icons), sisanya jatuh ke 'shield'. ---
+  $features = [];
+  foreach (blank_theme_lines(blank_theme_setting('hero_features')) as $line) {
+    [$label, $icon] = array_pad(explode('|', $line, 2), 2, 'shield');
+    $label = trim($label);
+    if ($label === '') {
+      continue;
+    }
+    $icon = preg_replace('/[^a-z0-9_-]/', '', strtolower(trim($icon)));
+    $features[] = [
+      'label' => $label,
+      'icon' => in_array($icon, ['shield', 'truck', 'paw'], TRUE) ? $icon : 'shield',
+    ];
+  }
+
+  // --- Tombol kedua: pakai nomor WhatsApp pengaturan header bila diisi ---
+  $whatsapp = preg_replace('/\D+/', '', (string) blank_theme_setting('header_whatsapp'));
+  $secondary = [
+    'label' => (string) blank_theme_setting('hero_secondary_label'),
+    'href' => $whatsapp !== ''
+      ? 'https://wa.me/' . $whatsapp
+      : blank_theme_link_url((string) blank_theme_setting('hero_secondary_url')),
+    'external' => $whatsapp !== '',
+  ];
+
+  // --- Foto hero: gambar bawaan theme, bisa diganti lewat hero_image ---
+  $image = trim((string) blank_theme_setting('hero_image'));
+  if ($image === '') {
+    // file_url_generator dipakai supaya path benar walau Drupal di subfolder
+    // (pola yang sama dengan logo theme di ThemeSettingsProvider).
+    $path = \Drupal::service('extension.list.theme')->getPath('blank_theme') . '/images/hero-boneka.webp';
+    $image = \Drupal::service('file_url_generator')->generateString($path);
+  }
+  else {
+    // Hanya untuk URL/path yang diketik admin: buang karakter yang bisa keluar
+    // dari atribut src (titik dua dan garis miring tetap diizinkan).
+    $image = preg_replace('/[^A-Za-z0-9\/:._~%#?&=\-+]/', '', $image);
+  }
+
+  $is_front = \Drupal::service('path.matcher')->isFrontPage();
+  $enabled = (bool) blank_theme_setting('hero_enabled')
+    && (!(bool) blank_theme_setting('hero_front_only') || $is_front);
+
+  return [
+    'enabled' => $enabled,
+    'eyebrow' => (string) blank_theme_setting('hero_eyebrow'),
+    'title' => (string) blank_theme_setting('hero_title'),
+    'title_accent' => (string) blank_theme_setting('hero_title_accent'),
+    'lead' => (string) blank_theme_setting('hero_lead'),
+    'cta' => [
+      'label' => (string) blank_theme_setting('hero_cta_label'),
+      'href' => blank_theme_link_url((string) blank_theme_setting('hero_cta_url')),
+    ],
+    'secondary' => $secondary,
+    'features' => $features,
+    'note' => blank_theme_lines(blank_theme_setting('hero_note')),
+    'badge' => blank_theme_lines(blank_theme_setting('hero_badge')),
+    'image' => $image,
+    // Judul halaman hanya disembunyikan di halaman depan: di sana hero yang
+    // membawa <h1>, sedangkan halaman lain tetap butuh judulnya.
+    'hide_title' => $enabled && $is_front && (bool) blank_theme_setting('hero_hide_page_title'),
+  ];
+}
+
+/**
+ * Menambah variabel header & hero untuk page.html.twig.
+ */
+function blank_theme_preprocess_page(array &$variables): void {
+  $variables['blank_header'] = blank_theme_header();
+  $variables['blank_hero'] = blank_theme_hero();
+  // Dipakai page.html.twig: bila true, blok Page title tidak dirender supaya
+  // tidak ada dua <h1> di halaman depan (lihat blank_theme_hero()).
+  $variables['blank_hide_page_title'] = $variables['blank_hero']['hide_title'];
+}
+
+
+/**
+ * Tagline blok Site branding: pakai Slogan (Site information) bila diisi,
+ * kalau kosong pakai pengaturan header_tagline theme.
+ */
+function blank_theme_preprocess_block__system_branding_block(array &$variables): void {
+  $slogan = trim((string) ($variables['site_slogan'] ?? ''));
+  $variables['blank_tagline'] = $slogan !== ''
+    ? $slogan
+    : (string) blank_theme_setting('header_tagline');
+}
+
+/**
+ * Pengaturan theme (tampil di Appearance > Settings).
+ *
+ * Semua nilai di bawah disimpan otomatis ke config `blank_theme.settings` oleh
+ * ThemeSettingsForm::submitForm().
+ */
+function blank_theme_form_system_theme_settings_alter(array &$form, FormStateInterface $form_state): void {
+  $form['blank_theme_header'] = [
+    '#type' => 'details',
+    '#title' => t('Header situs'),
+    '#description' => t('Bar atas: brand, menu, pencarian, dan tombol CTA.'),
+    '#open' => TRUE,
+    '#weight' => -20,
+  ];
+
+  $form['blank_theme_header']['header_tagline'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tagline di bawah nama situs'),
+    '#default_value' => blank_theme_setting('header_tagline'),
+    '#description' => t('Kosongkan untuk memakai Slogan dari halaman Site information.'),
+  ];
+
+  $form['blank_theme_header']['header_nav_links'] = [
+    '#type' => 'textarea',
+    '#title' => t('Menu bawaan theme'),
+    '#default_value' => blank_theme_setting('header_nav_links'),
+    '#rows' => 5,
+    '#description' => t('Satu link per baris dengan format <code>Label|path</code>, mis. <code>Produk|/produk</code>. Dipakai hanya bila region <em>Primary menu</em> tidak berisi blok menu (lihat Block layout).'),
+  ];
+
+  $form['blank_theme_header']['header_search_enabled'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Tampilkan kotak pencarian bawaan'),
+    '#default_value' => (bool) blank_theme_setting('header_search_enabled'),
+    '#description' => t('Diabaikan bila region <em>Header search</em> sudah berisi blok.'),
+  ];
+
+  $form['blank_theme_header']['header_search_placeholder'] = [
+    '#type' => 'textfield',
+    '#title' => t('Placeholder kotak pencarian'),
+    '#default_value' => blank_theme_setting('header_search_placeholder'),
+  ];
+
+  $form['blank_theme_header']['header_search_action'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tujuan form pencarian'),
+    '#default_value' => blank_theme_setting('header_search_action'),
+    '#description' => t('Contoh: <code>/search/node</code> (aktifkan modul core <em>Search</em>) atau path View pencarian Anda.'),
+  ];
+
+  $form['blank_theme_header']['header_cta_enabled'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Tampilkan tombol CTA'),
+    '#default_value' => (bool) blank_theme_setting('header_cta_enabled'),
+  ];
+
+  $form['blank_theme_header']['header_cta_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label tombol CTA'),
+    '#default_value' => blank_theme_setting('header_cta_label'),
+  ];
+
+  $form['blank_theme_header']['header_whatsapp'] = [
+    '#type' => 'textfield',
+    '#title' => t('Nomor WhatsApp'),
+    '#default_value' => blank_theme_setting('header_whatsapp'),
+    '#description' => t('Format internasional tanpa tanda +, mis. <code>6281234567890</code>. Bila diisi, tombol CTA mengarah ke <code>https://wa.me/...</code>.'),
+  ];
+
+  $form['blank_theme_header']['header_cta_url'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tujuan tombol CTA'),
+    '#default_value' => blank_theme_setting('header_cta_url'),
+    '#description' => t('Dipakai bila nomor WhatsApp kosong. Contoh: <code>/kontak</code>.'),
+  ];
+
+  $form['blank_theme_header']['header_sticky'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Header menempel di atas saat halaman di-scroll'),
+    '#default_value' => (bool) blank_theme_setting('header_sticky'),
+  ];
+
+  // --- Hero halaman depan (templates/hero.html.twig) ---
+  $form['blank_theme_hero'] = [
+    '#type' => 'details',
+    '#title' => t('Hero halaman depan'),
+    '#description' => t('Bagian di bawah header: label, judul, tombol, daftar keunggulan, dan foto boneka.'),
+    '#open' => FALSE,
+    '#weight' => -10,
+  ];
+
+  $form['blank_theme_hero']['hero_enabled'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Tampilkan hero'),
+    '#default_value' => (bool) blank_theme_setting('hero_enabled'),
+  ];
+
+  $form['blank_theme_hero']['hero_front_only'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Hanya di halaman depan'),
+    '#default_value' => (bool) blank_theme_setting('hero_front_only'),
+    '#description' => t('Bila dilepas, hero tampil di semua halaman.'),
+  ];
+
+  $form['blank_theme_hero']['hero_hide_page_title'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Sembunyikan judul halaman (blok Page title) di halaman depan'),
+    '#default_value' => (bool) blank_theme_setting('hero_hide_page_title'),
+    '#description' => t('Hero sudah membawa <code>&lt;h1&gt;</code>, jadi judul halaman tidak dirender dua kali. Hanya berlaku di halaman depan.'),
+  ];
+
+  $form['blank_theme_hero']['hero_eyebrow'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label kecil di atas judul'),
+    '#default_value' => blank_theme_setting('hero_eyebrow'),
+    '#description' => t('Kosongkan untuk menyembunyikannya. Teks ditampilkan kapital (huruf besar).'),
+  ];
+
+  $form['blank_theme_hero']['hero_title'] = [
+    '#type' => 'textfield',
+    '#title' => t('Judul — baris pertama'),
+    '#default_value' => blank_theme_setting('hero_title'),
+    '#description' => t('Judul hero adalah <code>&lt;h1&gt;</code> halaman depan.'),
+  ];
+
+  $form['blank_theme_hero']['hero_title_accent'] = [
+    '#type' => 'textfield',
+    '#title' => t('Judul — baris kedua (warna aksen)'),
+    '#default_value' => blank_theme_setting('hero_title_accent'),
+    '#description' => t('Selalu ditampilkan sebagai baris baru di bawah baris pertama.'),
+  ];
+
+  $form['blank_theme_hero']['hero_lead'] = [
+    '#type' => 'textarea',
+    '#title' => t('Paragraf pembuka'),
+    '#default_value' => blank_theme_setting('hero_lead'),
+    '#rows' => 3,
+  ];
+
+  $form['blank_theme_hero']['hero_cta_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tombol utama — label'),
+    '#default_value' => blank_theme_setting('hero_cta_label'),
+  ];
+
+  $form['blank_theme_hero']['hero_cta_url'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tombol utama — tujuan'),
+    '#default_value' => blank_theme_setting('hero_cta_url'),
+    '#description' => t('Contoh: <code>/produk</code>. Kosongkan labelnya untuk menyembunyikan tombol.'),
+  ];
+
+  $form['blank_theme_hero']['hero_secondary_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tombol kedua — label'),
+    '#default_value' => blank_theme_setting('hero_secondary_label'),
+    '#description' => t('Umumnya tombol WhatsApp. Bila <em>Nomor WhatsApp</em> di bagian Header diisi, tombol ini otomatis mengarah ke <code>https://wa.me/...</code>.'),
+  ];
+
+  $form['blank_theme_hero']['hero_secondary_url'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tombol kedua — tujuan'),
+    '#default_value' => blank_theme_setting('hero_secondary_url'),
+    '#description' => t('Dipakai bila <em>Nomor WhatsApp</em> di bagian Header kosong. Contoh: <code>/kontak</code>.'),
+  ];
+
+  $form['blank_theme_hero']['hero_features'] = [
+    '#type' => 'textarea',
+    '#title' => t('Daftar keunggulan'),
+    '#default_value' => blank_theme_setting('hero_features'),
+    '#rows' => 3,
+    '#description' => t('Satu keunggulan per baris dengan format <code>Label|ikon</code>, mis. <code>Kualitas Terjamin|shield</code>. Ikon: <code>shield</code>, <code>truck</code>, <code>paw</code> (lihat map <code>hero_icons</code> di <code>templates/hero.html.twig</code>).'),
+  ];
+
+  $form['blank_theme_hero']['hero_note'] = [
+    '#type' => 'textarea',
+    '#title' => t('Tulisan tangan di sisi kanan (dekorasi)'),
+    '#default_value' => blank_theme_setting('hero_note'),
+    '#rows' => 4,
+    '#description' => t('Satu baris tulisan per baris. Hanya tampil di layar ≥ 1200px. Kosongkan untuk menyembunyikannya.'),
+  ];
+
+  $form['blank_theme_hero']['hero_badge'] = [
+    '#type' => 'textarea',
+    '#title' => t('Teks bulatan pink (dekorasi)'),
+    '#default_value' => blank_theme_setting('hero_badge'),
+    '#rows' => 4,
+    '#description' => t('Satu baris per baris. Hanya tampil di layar ≥ 1200px.'),
+  ];
+
+  $form['blank_theme_hero']['hero_image'] = [
+    '#type' => 'textfield',
+    '#title' => t('Foto hero'),
+    '#default_value' => blank_theme_setting('hero_image'),
+    '#description' => t('Kosongkan untuk memakai gambar bawaan theme <code>images/hero-boneka.webp</code> (foto boneka di sisi kanan). Isi dengan path internal seperti <code>/sites/default/files/hero.jpg</code> atau URL penuh untuk menggantinya.'),
+  ];
+}
+
+/**
+ * Contoh hook lain yang sering dipakai (sengaja dikomentari):
  *
  * function blank_theme_preprocess_html(array &$variables): void {
  *   $variables['attributes']['class'][] = 'theme-blank_theme';
  * }
- */
-
-/**
- * Menambah variabel untuk page.html.twig.
- *
- * function blank_theme_preprocess_page(array &$variables): void {
- *   $variables['custom_value'] = 'contoh';
- * }
- */
-
-/**
- * Menambah saran nama template (mis. page--front.html.twig).
  *
  * function blank_theme_theme_suggestions_page_alter(array &$suggestions, array $variables): void {
  *   if ($variables['is_front']) {
  *     $suggestions[] = 'blank_theme_page__front';
  *   }
- * }
- */
-
-/**
- * Form pengaturan theme (tampil di Appearance > Settings).
- *
- * function blank_theme_form_system_theme_settings_alter(array &$form, FormStateInterface $form_state): void {
- *   $form['blank_theme']['contoh'] = [
- *     '#type' => 'textfield',
- *     '#title' => t('Contoh pengaturan'),
- *     '#default_value' => theme_get_setting('contoh'),
- *   ];
  * }
  */
