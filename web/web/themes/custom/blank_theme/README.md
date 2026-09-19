@@ -19,25 +19,29 @@ drush cr
 ```
 blank_theme/
 ├── blank_theme.info.yml         # metadata, region, library global
-├── blank_theme.libraries.yml    # definisi CSS/JS (library `base`, `header`, `hero`)
-├── blank_theme.theme            # hook PHP (preprocess header/hero, theme settings)
+├── blank_theme.libraries.yml    # definisi CSS/JS (library `base`, `header`, `hero`, `produk`)
+├── blank_theme.theme            # hook PHP (preprocess header/hero/produk, form alter, theme settings)
 ├── logo.svg                     # logo bawaan (maskot beruang, blok Site branding)
 ├── css/
 │   ├── base.css                 # variabel desain (palet) + layout dasar
 │   ├── header.css               # gaya bar atas (brand, menu, pencarian, CTA)
-│   └── hero.css                 # gaya hero halaman depan (foto boneka)
+│   ├── hero.css                 # gaya hero halaman depan (foto boneka)
+│   └── produk.css               # gaya halaman produk Commerce (+ form add-to-cart)
 ├── images/
 │   ├── hero-boneka.webp         # foto hero yang dipakai (1276×734, ~127 KB)
 │   └── hero-boneka.png          # gambar sumber (hanya untuk membuat ulang .webp)
-├── js/header.js                 # tombol menu untuk layar kecil (< 1200px)
+├── js/
+│   ├── header.js                # tombol menu untuk layar kecil (< 1200px)
+│   └── produk.js                # tab, galeri, stepper jumlah, sinkronisasi harga/stok
 ├── config/
 │   ├── schema/blank_theme.schema.yml     # schema config blank_theme.settings
-│   └── install/blank_theme.settings.yml  # nilai bawaan pengaturan header + hero
+│   └── install/blank_theme.settings.yml  # nilai bawaan pengaturan header + hero + produk
 └── templates/
     ├── html.html.twig                     # <html>/<head>/<body>
     ├── page.html.twig                     # region + title + tabs + messages
     ├── header.html.twig                   # bar atas (brand + menu + search + CTA)
     ├── hero.html.twig                     # hero halaman depan (di bawah header)
+    ├── commerce-product--produk--full.html.twig  # halaman produk (Commerce)
     └── block--system-branding-block.html.twig  # wordmark + tagline
 ```
 
@@ -89,6 +93,24 @@ Bar atas hanya memuat brand, jadi blok berikut diatur di **Block layout**
 
 `page_title` adalah region tambahan di `blank_theme.info.yml` supaya judul
 halaman tidak ikut tampil di bar atas.
+
+Blok bawaan **Messages** (Status messages) juga dipasang di `highlighted`, tapi
+theme memindahkannya: blok itu selalu mencetak placeholder — termasuk
+`<div data-drupal-messages-fallback>` — walau tidak ada pesan, sehingga
+`.site-highlighted` tampil sebagai pita kosong di atas setiap halaman.
+`blank_theme_clean_highlighted_region()` (dipanggil dari
+`blank_theme_preprocess_page()`) melepas blok tersebut dari region dan
+menyiapkan variabel `messages` yang dicetak `templates/page.html.twig` di dalam
+area konten, jadi pesan tetap muncul (dan tetap bisa diisi lewat JavaScript —
+lihat `core/misc/message.js`).
+
+Hal yang sama berlaku untuk blok yang tidak menghasilkan apa pun bagi
+pengunjung: *Primary admin actions* (`local_actions_block`) dirender sebagai
+`<div>` kosong di luar halaman admin, jadi blok itu ikut dilepas saat route
+yang sedang dibuka tidak punya aksi lokal. Bila region `highlighted` tidak
+menyisakan blok apa pun, wrapper `.site-highlighted` tidak dirender sama
+sekali — region tetap berfungsi normal ketika memang ada blok berisi di
+dalamnya.
 
 ### Warna & logo
 
@@ -203,6 +225,89 @@ Warna hero memakai variabel di `css/base.css`: `--color-hero-bg`,
   item/baris tampilan; mengubah jumlah baris aman tanpa menyentuh CSS.
 - Foto hero adalah elemen `<img>` dengan `alt=""` (murni dekorasi) dan
   `fetchpriority="high"` karena biasanya menjadi elemen LCP halaman depan.
+
+## Halaman produk Commerce (`commerce-product--produk--full.html.twig`)
+
+Halaman detail produk untuk product type **`produk`**. Seluruh label/teks berasal
+dari pengaturan theme, sedangkan data produk dari field Commerce.
+
+### Menyiapkan tipe produk (sekali)
+
+```bash
+cd web
+composer require 'drupal/commerce:^3.3'                     # modul Commerce
+docker compose exec drupal php scripts/setup-produk.php --with-demo
+docker compose exec drupal php scripts/setup-produk.php      # tanpa produk contoh
+```
+
+`scripts/setup-produk.php` idempotent (aman dijalankan berkali-kali) dan menyiapkan:
+
+| Bagian | Isi |
+|---|---|
+| Modul | `commerce`, `commerce_product`, `commerce_price`, `commerce_store`, `commerce_order`, `commerce_cart`, `commerce_checkout`, `commerce_payment`, `commerce_log`, `commerce_number_pattern`, `image`, `options`, `text` |
+| Toko | toko `online` default + mata uang **IDR** (simbol `Rp`) — wajib untuk keranjang |
+| Atribut | `ukuran` (widget radios) berisi 20/30/40/60 cm → tampil sebagai tombol pill |
+| Variation type | `produk` (order item type `default`) + field **Stok tersedia** (`field_stok`) |
+| Product type | `produk` + field pada tabel di bawah |
+| Display | view mode **full** (halaman produk), form produk, dan form *Add to cart* (tombol ukuran + field jumlah) |
+| Permission | role *anonymous* & *authenticated*: `view produk commerce_product`, `access checkout` |
+
+Field pada product type `produk`:
+
+| Field | Label | Dipakai untuk |
+|---|---|---|
+| `field_badge` | Badge | pill di atas foto (Best Seller/Terlaris/Baru/Promo) |
+| `field_rating` | Rating | bintang + angka di bawah judul |
+| `field_jumlah_ulasan` | Jumlah ulasan | teks "(128 ulasan)" dan label tab ulasan |
+| `field_terjual` | Terjual | "Terjual 1.200+" (≥1000 otomatis diberi tanda +) |
+| `field_galeri` | Galeri foto | foto utama + baris thumbnail |
+| `field_keunggulan` | Poin unggulan | daftar centang di tab deskripsi (1 item = 1 baris) |
+| `field_ulasan` | Ulasan pembeli | daftar ulasan di tab ulasan (1 item = 1 ulasan) |
+| `field_bahan`, `field_warna`, `field_berat`, `field_perawatan`, `field_custom` | label field | baris tabel **Spesifikasi** (label diambil dari nama field) |
+| `field_minimum_order` | Minimum order | baris tabel spesifikasi (+ satuan dari pengaturan) |
+| `body` | Deskripsi produk | *summary* → paragraf singkat di bawah judul; teks penuh → tab deskripsi |
+
+Harga & diskon: `price` = harga jual, `list_price` = harga coret. Badge
+"Hemat N%" dihitung theme dari selisih keduanya, jadi admin tidak mengetik
+persentase.
+
+### Variabel & perilaku
+
+- `blank_theme_produk()` di `blank_theme.theme` menyusun variabel `blank_produk`;
+  `blank_theme_preprocess_commerce_product()` memasangnya ke template sekaligus
+  mengirim peta variasi ke `drupalSettings.blankProduk` (dipakai `js/produk.js`).
+- `js/produk.js`: tab deskripsi/spesifikasi/ulasan, pilih foto lewat thumbnail,
+  tombol −/+ jumlah, dan **sinkronisasi harga / harga coret / diskon / stok** saat
+  ukuran diganti (angka datang dari server, bukan dihitung di browser).
+- `blank_theme_form_alter()` mengganti label form *Add to cart* ("Pilih Ukuran",
+  "Jumlah", "Tambah ke Keranjang") dan menambahkan tombol WhatsApp yang memakai
+  pengaturan `header_whatsapp` (fallback `/kontak`).
+- Harga & stok bawaan Commerce di dalam form disembunyikan lewat CSS
+  (`[class*="product--variation-field--"]`) karena theme merender sendiri sesuai
+  desain. Karena itu CSS memakai selector **class** (`.form-actions`), bukan id —
+  id form Drupal berubah (`edit-actions--2`) setelah AJAX membangun ulang form.
+- Blok *Page title* dan *Breadcrumb* tidak dirender di halaman produk: template
+  produk sudah memuat `<h1>` dan breadcrumb sendiri (Beranda › Produk › nama).
+
+### Pengaturan theme (Appearance > Settings → Halaman produk)
+
+`produk_crumb_home`, `produk_crumb_catalog`, `produk_crumb_catalog_url`,
+`produk_size_label`, `produk_quantity_label`, `produk_stock_label`,
+`produk_stock_unit`, `produk_discount_label`, `produk_sold_label`,
+`produk_review_label`, `produk_cart_label`, `produk_whatsapp_label`,
+`produk_wish_label`, `produk_tab_description`, `produk_tab_specification`,
+`produk_tab_review`, `produk_features` (`Label|Subteks|ikon` per baris),
+`produk_grosir_title`, `produk_grosir_text`, `produk_grosir_label`,
+`produk_custom_title`, `produk_custom_text`, `produk_custom_label`,
+`produk_empty_review`, `produk_empty_specification`.
+
+### Belum termasuk
+
+- Tombol hati (wishlist) masih ornamen — belum menyimpan produk (perlu modul wishlist).
+- Ulasan memakai field angka + daftar teks, bukan modul core *Comment*: belum ada
+  formulir ulasan dari pengunjung.
+- Halaman katalog `/produk` (daftar produk) belum dibuat, sedangkan breadcrumb &
+  menu mengarah ke path itu — perlu View Commerce.
 
 ## Titik-titik yang biasanya diubah lebih dulu
 

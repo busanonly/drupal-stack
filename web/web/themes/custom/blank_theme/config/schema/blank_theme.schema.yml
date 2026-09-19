@@ -81,3 +81,80 @@ blank_theme.settings:
     hero_image:
       type: string
       label: 'Foto hero (path/URL; kosong = gambar bawaan theme)'
+
+    # --- Halaman produk (templates/commerce-product--produk--full.html.twig) ---
+    produk_crumb_home:
+      type: string
+      label: 'Breadcrumb halaman produk — label beranda'
+    produk_crumb_catalog:
+      type: string
+      label: 'Breadcrumb halaman produk — label katalog'
+    produk_crumb_catalog_url:
+      type: string
+      label: 'Breadcrumb halaman produk — tujuan katalog'
+    produk_size_label:
+      type: string
+      label: 'Judul pilihan ukuran (variasi)'
+    produk_quantity_label:
+      type: string
+      label: 'Label field jumlah'
+    produk_stock_label:
+      type: string
+      label: 'Label stok tersedia'
+    produk_stock_unit:
+      type: string
+      label: 'Satuan stok (mis. pcs)'
+    produk_discount_label:
+      type: string
+      label: 'Label diskon (mis. Hemat)'
+    produk_sold_label:
+      type: string
+      label: 'Label terjual'
+    produk_review_label:
+      type: string
+      label: 'Label ulasan'
+    produk_cart_label:
+      type: string
+      label: 'Label tombol tambah ke keranjang'
+    produk_whatsapp_label:
+      type: string
+      label: 'Label tombol WhatsApp'
+    produk_wish_label:
+      type: string
+      label: 'Label (aria) tombol simpan/wishlist'
+    produk_tab_description:
+      type: string
+      label: 'Label tab deskripsi'
+    produk_tab_specification:
+      type: string
+      label: 'Label tab spesifikasi'
+    produk_tab_review:
+      type: string
+      label: 'Label tab ulasan'
+    produk_features:
+      type: string
+      label: 'Empat keunggulan (satu "Label|Subteks|ikon" per baris)'
+    produk_grosir_title:
+      type: string
+      label: 'Kartu grosir — judul'
+    produk_grosir_text:
+      type: string
+      label: 'Kartu grosir — teks (kosong = kartu disembunyikan)'
+    produk_grosir_label:
+      type: string
+      label: 'Kartu grosir — label tombol'
+    produk_custom_title:
+      type: string
+      label: 'Kotak custom — judul'
+    produk_custom_text:
+      type: string
+      label: 'Kotak custom — teks (kosong = kotak disembunyikan)'
+    produk_custom_label:
+      type: string
+      label: 'Kotak custom — label tombol'
+    produk_empty_review:
+      type: string
+      label: 'Teks bila belum ada ulasan'
+    produk_empty_specification:
+      type: string
+      label: 'Teks bila spesifikasi kosong'

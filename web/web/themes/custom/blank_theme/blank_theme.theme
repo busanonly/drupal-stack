@@ -10,8 +10,13 @@
  * Contoh-contoh di bawah sengaja dikomentari — hapus komentar bila dipakai.
  */
 
+use Drupal\block\BlockInterface;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Block\MessagesBlockPluginInterface;
 use Drupal\Core\Extension\ThemeSettingsProvider;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 
 /**
@@ -59,6 +64,33 @@ function blank_theme_default_settings() {
     // Sembunyikan judul halaman di halaman depan saat hero tampil (hero sudah
     // membawa <h1>, jadi blok Page title tidak perlu dirender lagi).
     'hero_hide_page_title' => TRUE,
+    // --- Halaman produk (templates/commerce-product--produk--full.html.twig) ---
+    'produk_crumb_home' => 'Beranda',
+    'produk_crumb_catalog' => 'Produk',
+    'produk_crumb_catalog_url' => '/produk',
+    'produk_size_label' => 'Pilih Ukuran',
+    'produk_quantity_label' => 'Jumlah',
+    'produk_stock_label' => 'Stok tersedia',
+    'produk_stock_unit' => 'pcs',
+    'produk_discount_label' => 'Hemat',
+    'produk_sold_label' => 'Terjual',
+    'produk_review_label' => 'ulasan',
+    'produk_cart_label' => 'Tambah ke Keranjang',
+    'produk_whatsapp_label' => 'Konsultasi via WhatsApp',
+    'produk_wish_label' => 'Simpan ke wishlist',
+    'produk_tab_description' => 'Deskripsi Produk',
+    'produk_tab_specification' => 'Spesifikasi',
+    'produk_tab_review' => 'Ulasan',
+    // Ikon 4 keunggulan (bisa diganti emoji/karakter lain tanpa ubah kode).
+    'produk_features' => "Produk Berkualitas|Bahan aman & lembut|✓\nHarga Grosir|Lebih hemat|Rp\nPengiriman Cepat|Seluruh Indonesia|✈\nSiap Melayani|Konsultasi gratis|☎",
+    'produk_grosir_title' => 'Butuh Penawaran Harga Grosir?',
+    'produk_grosir_text' => 'Dapatkan harga khusus untuk pembelian dalam jumlah besar.',
+    'produk_grosir_label' => 'Hubungi Kami via WhatsApp',
+    'produk_custom_title' => 'Menerima Custom Boneka',
+    'produk_custom_text' => 'Bisa tambah logo, bordir nama, ganti pakaian, dan lain-lain. Konsultasikan kebutuhan Anda sekarang.',
+    'produk_custom_label' => 'Konsultasi',
+    'produk_empty_review' => 'Belum ada ulasan untuk produk ini.',
+    'produk_empty_specification' => 'Spesifikasi produk belum diisi.',
   ];
 }
 
@@ -267,7 +299,102 @@ function blank_theme_preprocess_page(array &$variables): void {
   $variables['blank_hero'] = blank_theme_hero();
   // Dipakai page.html.twig: bila true, blok Page title tidak dirender supaya
   // tidak ada dua <h1> di halaman depan (lihat blank_theme_hero()).
-  $variables['blank_hide_page_title'] = $variables['blank_hero']['hide_title'];
+  $variables['blank_hide_page_title'] = $variables['blank_hero']['hide_title']
+    // Halaman detail produk juga merender judulnya sendiri di kolom kanan
+    // (templates/commerce-product--produk--full.html.twig).
+    || (bool) \Drupal::routeMatch()->getParameter('commerce_product');
+
+  // Halaman produk punya breadcrumb sendiri di dalam template produk
+  // (Beranda › Produk › nama produk), jadi blok Breadcrumb bawaan dihilangkan.
+  if (\Drupal::routeMatch()->getParameter('commerce_product')) {
+    unset($variables['page']['breadcrumb']);
+  }
+
+  // Rapikan region `highlighted` (lihat blank_theme_clean_highlighted_region()).
+  blank_theme_clean_highlighted_region($variables);
+}
+
+/**
+ * Bersihkan region `highlighted` dari blok yang tidak perlu tampil.
+ *
+ * Blok bawaan *Messages* selalu mencetak placeholder pesan sistem — termasuk
+ * `<div data-drupal-messages-fallback>` — walau tidak ada pesan, sehingga
+ * wrapper `.site-highlighted` tampil sebagai pita kosong di atas setiap
+ * halaman (lihat css/base.css). Karena itu blok itu dilepas dari region dan
+ * pesan sistem dicetak di area konten (page.html.twig memakai variabel
+ * `messages`).
+ *
+ * Blok lain yang memang tidak menghasilkan apa pun untuk pengunjung (mis.
+ * "Primary admin actions" di luar halaman admin) juga dilepas, dan bila tidak
+ * ada blok lain yang tersisa region dikosongkan supaya wrapper-nya tidak
+ * dirender sama sekali.
+ */
+function blank_theme_clean_highlighted_region(array &$variables): void {
+  $region = $variables['page']['highlighted'] ?? [];
+  if ($region === []) {
+    return;
+  }
+
+  $messages_moved = FALSE;
+  $storage = \Drupal::entityTypeManager()->getStorage('block');
+  foreach (Element::children($region) as $block_id) {
+    // Anak region membawa ID config blok (lihat BlockPageVariant::build()).
+    $block = $storage->load($block_id);
+    if ($block === NULL) {
+      continue;
+    }
+    if (blank_theme_is_messages_block($block)) {
+      unset($region[$block_id]);
+      $messages_moved = TRUE;
+    }
+    elseif (blank_theme_block_has_no_output($block)) {
+      unset($region[$block_id]);
+    }
+  }
+
+  if ($messages_moved) {
+    // #include_fallback tetap TRUE seperti blok aslinya: penanda
+    // `data-drupal-messages-fallback` dipakai core/misc/message.js untuk
+    // menyisipkan pesan baru lewat JavaScript (mis. hasil AJAX).
+    $variables['messages'] = [
+      '#type' => 'status_messages',
+      '#include_fallback' => TRUE,
+    ];
+  }
+
+  $variables['page']['highlighted'] = Element::children($region) === [] ? [] : $region;
+}
+
+/**
+ * Blok ini blok "pesan sistem" (bawaan Messages)?
+ *
+ * Blok bawaan Messages tersedia sebagai plugin `system_messages_block` (base
+ * id `system_messages`) dan mengimplementasikan MessagesBlockPluginInterface.
+ */
+function blank_theme_is_messages_block(BlockInterface $block): bool {
+  return $block->getPlugin() instanceof MessagesBlockPluginInterface;
+}
+
+/**
+ * Blok ini dipastikan tidak mencetak apa pun untuk pengunjung saat ini?
+ *
+ * Blok "Primary admin actions" mengembalikan daftar aksi lokal untuk route
+ * saat ini; di luar halaman admin daftarnya kosong (hanya berisi metadata
+ * `#cache`), tetapi pembungkus bloknya tetap dicetak sehingga menyisakan
+ * `<div>` kosong di dalam region `highlighted`.
+ *
+ * Hanya blok yang bisa dipastikan kosong tanpa merender isinya yang dicek di
+ * sini — merender isi blok di tahap preprocess akan mematikan lazy rendering
+ * (placeholder/BigPipe).
+ */
+function blank_theme_block_has_no_output(BlockInterface $block): bool {
+  if ($block->getPlugin()->getPluginId() !== 'local_actions_block') {
+    return FALSE;
+  }
+  return Element::isEmpty(
+    \Drupal::service('plugin.manager.menu.local_action')
+      ->getActionsForRoute(\Drupal::routeMatch()->getRouteName())
+  );
 }
 
 
@@ -478,6 +605,471 @@ function blank_theme_form_system_theme_settings_alter(array &$form, FormStateInt
     '#default_value' => blank_theme_setting('hero_image'),
     '#description' => t('Kosongkan untuk memakai gambar bawaan theme <code>images/hero-boneka.webp</code> (foto boneka di sisi kanan). Isi dengan path internal seperti <code>/sites/default/files/hero.jpg</code> atau URL penuh untuk menggantinya.'),
   ];
+
+  // --- Halaman produk (templates/commerce-product--produk--full.html.twig) ---
+  $form['blank_theme_produk'] = [
+    '#type' => 'details',
+    '#title' => t('Halaman produk'),
+    '#description' => t('Teks & label di halaman detail produk Commerce (product type <code>produk</code>). Harga, stok, spesifikasi, dan ulasan diambil dari field produk.'),
+    '#open' => FALSE,
+    '#weight' => -10,
+  ];
+
+  $form['blank_theme_produk']['produk_crumb_home'] = [
+    '#type' => 'textfield',
+    '#title' => t('Breadcrumb — label beranda'),
+    '#default_value' => blank_theme_setting('produk_crumb_home'),
+  ];
+
+  $form['blank_theme_produk']['produk_crumb_catalog'] = [
+    '#type' => 'textfield',
+    '#title' => t('Breadcrumb — label katalog'),
+    '#default_value' => blank_theme_setting('produk_crumb_catalog'),
+  ];
+
+  $form['blank_theme_produk']['produk_crumb_catalog_url'] = [
+    '#type' => 'textfield',
+    '#title' => t('Breadcrumb — tujuan katalog'),
+    '#default_value' => blank_theme_setting('produk_crumb_catalog_url'),
+    '#description' => t('Contoh: <code>/produk</code> (halaman daftar produk).'),
+  ];
+
+  $form['blank_theme_produk']['produk_size_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Judul pilihan ukuran'),
+    '#default_value' => blank_theme_setting('produk_size_label'),
+    '#description' => t('Ditampilkan di atas tombol ukuran (variasi).'),
+  ];
+
+  $form['blank_theme_produk']['produk_quantity_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label jumlah'),
+    '#default_value' => blank_theme_setting('produk_quantity_label'),
+  ];
+
+  $form['blank_theme_produk']['produk_stock_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label stok'),
+    '#default_value' => blank_theme_setting('produk_stock_label'),
+  ];
+
+  $form['blank_theme_produk']['produk_stock_unit'] = [
+    '#type' => 'textfield',
+    '#title' => t('Satuan stok'),
+    '#default_value' => blank_theme_setting('produk_stock_unit'),
+    '#description' => t('Dipakai pada baris "stok" dan tabel spesifikasi, mis. <code>pcs</code>.'),
+  ];
+
+  $form['blank_theme_produk']['produk_discount_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label diskon'),
+    '#default_value' => blank_theme_setting('produk_discount_label'),
+    '#description' => t('Persentase dihitung otomatis dari perbandingan harga jual & harga coret (list price) variasi.'),
+  ];
+
+  $form['blank_theme_produk']['produk_sold_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label terjual'),
+    '#default_value' => blank_theme_setting('produk_sold_label'),
+  ];
+
+  $form['blank_theme_produk']['produk_review_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label ulasan'),
+    '#default_value' => blank_theme_setting('produk_review_label'),
+  ];
+
+  $form['blank_theme_produk']['produk_cart_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label tombol keranjang'),
+    '#default_value' => blank_theme_setting('produk_cart_label'),
+  ];
+
+  $form['blank_theme_produk']['produk_whatsapp_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label tombol WhatsApp'),
+    '#default_value' => blank_theme_setting('produk_whatsapp_label'),
+    '#description' => t('Tombol di samping keranjang. Tujuannya memakai <em>Nomor WhatsApp</em> di bagian Header (bila kosong: <code>/kontak</code>).'),
+  ];
+
+  $form['blank_theme_produk']['produk_wish_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Label tombol simpan (ikon hati)'),
+    '#default_value' => blank_theme_setting('produk_wish_label'),
+    '#description' => t('Dipakai sebagai aria-label; ikon hati belum menyimpan apa pun (placeholder desain).'),
+  ];
+
+  $form['blank_theme_produk']['produk_tab_description'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tab — deskripsi'),
+    '#default_value' => blank_theme_setting('produk_tab_description'),
+  ];
+
+  $form['blank_theme_produk']['produk_tab_specification'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tab — spesifikasi'),
+    '#default_value' => blank_theme_setting('produk_tab_specification'),
+  ];
+
+  $form['blank_theme_produk']['produk_tab_review'] = [
+    '#type' => 'textfield',
+    '#title' => t('Tab — ulasan'),
+    '#default_value' => blank_theme_setting('produk_tab_review'),
+  ];
+
+  $form['blank_theme_produk']['produk_features'] = [
+    '#type' => 'textarea',
+    '#title' => t('Empat keunggulan (di bawah tombol)'),
+    '#default_value' => blank_theme_setting('produk_features'),
+    '#rows' => 4,
+    '#description' => t('Satu keunggulan per baris dengan format <code>Label|Subteks|ikon</code>, mis. <code>Produk Berkualitas|Bahan aman &amp; lembut|✓</code>. Ikon bisa karakter/emoji apa pun.'),
+  ];
+
+  $form['blank_theme_produk']['produk_grosir_title'] = [
+    '#type' => 'textfield',
+    '#title' => t('Kartu grosir — judul'),
+    '#default_value' => blank_theme_setting('produk_grosir_title'),
+  ];
+
+  $form['blank_theme_produk']['produk_grosir_text'] = [
+    '#type' => 'textarea',
+    '#title' => t('Kartu grosir — teks'),
+    '#default_value' => blank_theme_setting('produk_grosir_text'),
+    '#rows' => 2,
+    '#description' => t('Kosongkan untuk menyembunyikan kartu grosir.'),
+  ];
+
+  $form['blank_theme_produk']['produk_grosir_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Kartu grosir — label tombol'),
+    '#default_value' => blank_theme_setting('produk_grosir_label'),
+  ];
+
+  $form['blank_theme_produk']['produk_custom_title'] = [
+    '#type' => 'textfield',
+    '#title' => t('Kotak custom — judul'),
+    '#default_value' => blank_theme_setting('produk_custom_title'),
+  ];
+
+  $form['blank_theme_produk']['produk_custom_text'] = [
+    '#type' => 'textarea',
+    '#title' => t('Kotak custom — teks'),
+    '#default_value' => blank_theme_setting('produk_custom_text'),
+    '#rows' => 2,
+    '#description' => t('Kosongkan untuk menyembunyikan kotak ini.'),
+  ];
+
+  $form['blank_theme_produk']['produk_custom_label'] = [
+    '#type' => 'textfield',
+    '#title' => t('Kotak custom — label tombol'),
+    '#default_value' => blank_theme_setting('produk_custom_label'),
+  ];
+
+  $form['blank_theme_produk']['produk_empty_review'] = [
+    '#type' => 'textfield',
+    '#title' => t('Teks bila belum ada ulasan'),
+    '#default_value' => blank_theme_setting('produk_empty_review'),
+  ];
+
+  $form['blank_theme_produk']['produk_empty_specification'] = [
+    '#type' => 'textfield',
+    '#title' => t('Teks bila spesifikasi kosong'),
+    '#default_value' => blank_theme_setting('produk_empty_specification'),
+  ];
+}
+
+/**
+ * Format harga untuk tampilan: "Rp 65.000" (desain memakai spasi setelah simbol).
+ *
+ * @param \Drupal\commerce_price\Price|null $price
+ *   Harga Commerce.
+ *
+ * @return string
+ *   Harga siap tampil, atau string kosong bila harga tidak ada.
+ */
+function blank_theme_produk_format_harga($price) {
+  if (!$price) {
+    return '';
+  }
+  // CurrencyFormatter Commerce extends formatter commerceguys: parameternya
+  // angka + kode mata uang (bukan objek Price).
+  $teks = (string) \Drupal::service('commerce_price.currency_formatter')
+    ->format($price->getNumber(), $price->getCurrencyCode());
+  // Formatter Commerce menulis "Rp65.000" untuk IDR; desain memakai "Rp 65.000".
+  return trim(preg_replace('/^(Rp|IDR)\s*/u', 'Rp ', $teks));
+}
+
+/**
+ * URL WhatsApp dari pengaturan header, atau fallback ke path lain.
+ *
+ * @param string $fallback
+ *   Path internal yang dipakai bila nomor WhatsApp belum diisi.
+ *
+ * @return array
+ *   ['url' => string, 'external' => bool].
+ */
+function blank_theme_whatsapp_url($fallback = '/kontak') {
+  $nomor = preg_replace('/\D+/', '', (string) blank_theme_setting('header_whatsapp'));
+  if ($nomor !== '') {
+    return ['url' => 'https://wa.me/' . $nomor, 'external' => TRUE];
+  }
+  return ['url' => blank_theme_link_url($fallback), 'external' => FALSE];
+}
+
+/**
+ * Susun variabel halaman produk untuk templates/commerce-product--produk--full.
+ *
+ * Semua teks diambil dari pengaturan theme (Appearance > Settings), sedangkan
+ * data produk (harga, stok, spesifikasi, ulasan) dari field Commerce.
+ *
+ * @param \Drupal\commerce_product\Entity\ProductInterface $product
+ *   Produk yang sedang dilihat.
+ *
+ * @return array
+ *   Variabel siap pakai untuk template.
+ */
+function blank_theme_produk($product) {
+  // --- Galeri foto dari field_galeri (thumbnail memakai image style bawaan) ---
+  $galeri = [];
+  $thumb_style = \Drupal::entityTypeManager()->getStorage('image_style')->load('thumbnail');
+  $galeri_items = $product->hasField('field_galeri') ? $product->get('field_galeri') : [];
+  foreach ($galeri_items as $item) {
+    $file = $item->entity;
+    if (!$file) {
+      continue;
+    }
+    $uri = $file->getFileUri();
+    $gambar = \Drupal::service('image.factory')->get($uri);
+    $galeri[] = [
+      'url' => \Drupal::service('file_url_generator')->generateString($uri),
+      'thumb' => $thumb_style ? $thumb_style->buildUrl($uri) : \Drupal::service('file_url_generator')->generateString($uri),
+      'alt' => trim((string) $item->alt) !== '' ? $item->alt : $product->label(),
+      'width' => $gambar ? $gambar->getWidth() : NULL,
+      'height' => $gambar ? $gambar->getHeight() : NULL,
+    ];
+  }
+
+  // --- Variasi: harga, diskon, stok (juga dikirim ke js/produk.js) ---
+  $diskon_label = (string) blank_theme_setting('produk_discount_label');
+  $satuan = (string) blank_theme_setting('produk_stock_unit');
+  $variasi = [];
+  foreach ($product->getVariations() as $variation) {
+    if (!$variation->isPublished()) {
+      continue;
+    }
+    $harga = $variation->getPrice();
+    $coret = $variation->getListPrice();
+    $diskon = 0;
+    if ($harga && $coret && (float) $coret->getNumber() > (float) $harga->getNumber()) {
+      $diskon = (int) round(((float) $coret->getNumber() - (float) $harga->getNumber()) / (float) $coret->getNumber() * 100);
+    }
+    $stok = $variation->hasField('field_stok') && !$variation->get('field_stok')->isEmpty()
+      ? (int) $variation->get('field_stok')->value
+      : NULL;
+    $atribut = $variation->hasField('attribute_ukuran') ? $variation->getAttributeValueId('attribute_ukuran') : NULL;
+    $label = NULL;
+    if ($atribut && ($value = $variation->getAttributeValue('attribute_ukuran'))) {
+      $label = $value->label();
+    }
+    $variasi[] = [
+      'id' => (int) $variation->id(),
+      'attribute' => (int) $atribut,
+      'label' => $label,
+      'harga' => blank_theme_produk_format_harga($harga),
+      'harga_coret' => $diskon ? blank_theme_produk_format_harga($coret) : '',
+      'diskon' => $diskon,
+      'diskon_label' => $diskon_label,
+      'stok' => $stok === NULL ? '' : $stok . ($satuan !== '' ? ' ' . $satuan : ''),
+    ];
+  }
+  // Variasi pertama = variasi default Commerce (sama dengan radio yang terpilih).
+  $utama = $variasi ? reset($variasi) : NULL;
+
+  // --- Spesifikasi: label field + nilainya (tabel di halaman produk) ---
+  $spesifikasi = [['label' => t('Nama Produk'), 'nilai' => $product->label()]];
+  $ukuran = [];
+  foreach ($variasi as $variasi_ukuran) {
+    if (!empty($variasi_ukuran['label'])) {
+      $ukuran[$variasi_ukuran['label']] = TRUE;
+    }
+  }
+  $field_variation = \Drupal::service('entity_field.manager')->getFieldDefinitions('commerce_product_variation', 'produk');
+  if ($ukuran && isset($field_variation['attribute_ukuran'])) {
+    $spesifikasi[] = [
+      'label' => $field_variation['attribute_ukuran']->getLabel(),
+      'nilai' => implode(', ', array_keys($ukuran)),
+    ];
+  }
+  foreach (['field_bahan', 'field_warna', 'field_berat', 'field_perawatan', 'field_minimum_order', 'field_custom'] as $nama_field) {
+    if (!$product->hasField($nama_field) || $product->get($nama_field)->isEmpty()) {
+      continue;
+    }
+    $nilai = (string) $product->get($nama_field)->getString();
+    if ($nama_field === 'field_minimum_order' && $satuan !== '') {
+      $nilai .= ' ' . $satuan;
+    }
+    $spesifikasi[] = [
+      'label' => $product->get($nama_field)->getFieldDefinition()->getLabel(),
+      'nilai' => $nilai,
+    ];
+  }
+
+  // --- Poin unggulan & ulasan (field multi-value, teks bebas) ---
+  $keunggulan = [];
+  if ($product->hasField('field_keunggulan')) {
+    foreach ($product->get('field_keunggulan') as $item) {
+      if (trim((string) $item->value) !== '') {
+        $keunggulan[] = $item->value;
+      }
+    }
+  }
+  $ulasan = [];
+  if ($product->hasField('field_ulasan')) {
+    foreach ($product->get('field_ulasan') as $item) {
+      if (trim((string) $item->value) !== '') {
+        // Teks bebas: hanya baris baru yang dipertahankan sebagai HTML.
+        $ulasan[] = Markup::create(nl2br(Html::escape($item->value)));
+      }
+    }
+  }
+
+  // --- 4 keunggulan: "Label|Subteks|ikon" per baris ---
+  $fitur = [];
+  foreach (blank_theme_lines(blank_theme_setting('produk_features')) as $baris) {
+    $bagian = array_pad(explode('|', $baris, 3), 3, '');
+    if (trim($bagian[0]) === '') {
+      continue;
+    }
+    $fitur[] = [
+      'label' => trim($bagian[0]),
+      'sub' => trim($bagian[1]),
+      'ikon' => trim($bagian[2]) !== '' ? trim($bagian[2]) : '✓',
+    ];
+  }
+
+  // --- Angka ringkas (rating/ulasan/terjual) ---
+  $rating = $product->hasField('field_rating') && !$product->get('field_rating')->isEmpty()
+    ? (float) $product->get('field_rating')->value
+    : 0.0;
+  $ulasan_jumlah = $product->hasField('field_jumlah_ulasan') && !$product->get('field_jumlah_ulasan')->isEmpty()
+    ? (int) $product->get('field_jumlah_ulasan')->value
+    : 0;
+  $terjual = $product->hasField('field_terjual') && !$product->get('field_terjual')->isEmpty()
+    ? (int) $product->get('field_terjual')->value
+    : 0;
+  $whatsapp = blank_theme_whatsapp_url();
+
+  return [
+    'galeri' => $galeri,
+    'variasi' => $variasi,
+    'variasi_utama' => $utama,
+    'crumb_home' => (string) blank_theme_setting('produk_crumb_home'),
+    'crumb_catalog' => (string) blank_theme_setting('produk_crumb_catalog'),
+    'crumb_catalog_url' => blank_theme_link_url((string) blank_theme_setting('produk_crumb_catalog_url')),
+    'harga' => $utama ? $utama['harga'] : '',
+    'harga_coret' => $utama ? $utama['harga_coret'] : '',
+    'diskon' => $utama ? $utama['diskon'] : 0,
+    'diskon_label' => $diskon_label,
+    'stok' => $utama ? $utama['stok'] : '',
+    'stok_label' => (string) blank_theme_setting('produk_stock_label'),
+    'rating' => $rating ? number_format($rating, 1, '.', '') : '',
+    'rating_bulat' => (int) round($rating),
+    'ulasan_jumlah' => $ulasan_jumlah,
+    'ulasan_label' => (string) blank_theme_setting('produk_review_label'),
+    'terjual' => $terjual,
+    'terjual_format' => $terjual >= 1000 ? number_format($terjual, 0, ',', '.') . '+' : (string) $terjual,
+    'terjual_label' => (string) blank_theme_setting('produk_sold_label'),
+    'ringkasan' => trim((string) ($product->hasField('body') ? $product->get('body')->summary : '')),
+    'keunggulan' => $keunggulan,
+    'ulasan' => $ulasan,
+    'ulasan_kosong' => (string) blank_theme_setting('produk_empty_review'),
+    'spesifikasi' => $spesifikasi,
+    'spesifikasi_kosong' => (string) blank_theme_setting('produk_empty_specification'),
+    'fitur' => $fitur,
+    'tab_deskripsi' => (string) blank_theme_setting('produk_tab_description'),
+    'tab_spesifikasi' => (string) blank_theme_setting('produk_tab_specification'),
+    'tab_ulasan' => (string) blank_theme_setting('produk_tab_review'),
+    'grosir_title' => (string) blank_theme_setting('produk_grosir_title'),
+    'grosir_text' => (string) blank_theme_setting('produk_grosir_text'),
+    'grosir_label' => (string) blank_theme_setting('produk_grosir_label'),
+    'custom_title' => (string) blank_theme_setting('produk_custom_title'),
+    'custom_text' => (string) blank_theme_setting('produk_custom_text'),
+    'custom_label' => (string) blank_theme_setting('produk_custom_label'),
+    'wish_label' => (string) blank_theme_setting('produk_wish_label'),
+    'wa_url' => $whatsapp['url'],
+    'wa_label' => (string) blank_theme_setting('produk_whatsapp_label'),
+  ];
+}
+
+/**
+ * Menyiapkan variabel halaman produk (templates/commerce-product--produk--full).
+ */
+function blank_theme_preprocess_commerce_product(array &$variables): void {
+  // Variabel `product` dari Commerce berisi elemen field (array), bukan entity;
+  // entity-nya ada di elements['#commerce_product'] (lihat
+  // CommerceProductThemeHooks::preprocessCommerceProduct()).
+  $product = $variables['elements']['#commerce_product'] ?? NULL;
+  if (!$product) {
+    return;
+  }
+  $produk = blank_theme_produk($product);
+  // Commerce tidak menyediakan variabel `content` (yang ada: elements, product,
+  // product_entity). Template theme memakai konvensi content.* seperti template
+  // core, jadi element field diarahkan ke sana.
+  $variables['content'] = $variables['elements'];
+  $variables['blank_produk'] = $produk;
+  // Peta variasi untuk js/produk.js: harga & stok ikut berubah saat ukuran
+  // diganti tanpa perlu request ulang.
+  $variables['#attached']['drupalSettings']['blankProduk']['variations'] = $produk['variasi'];
+  // Label tombol -/+ jumlah (dipakai js/produk.js; tombolnya dibuat di JS
+  // karena markup form Commerce tidak menyediakan slot markup).
+  $variables['#attached']['drupalSettings']['blankProduk']['label'] = [
+    'stepDown' => t('Kurangi jumlah'),
+    'stepUp' => t('Tambah jumlah'),
+  ];
+}
+
+/**
+ * Penyesuaian form "Add to cart" Commerce di halaman produk.
+ *
+ * Label (Pilih Ukuran, Jumlah, tombol keranjang) diambil dari pengaturan theme
+ * supaya bisa diubah tanpa edit kode; tombol WhatsApp ditambahkan di samping
+ * tombol keranjang, plus stepper -/+ untuk field jumlah.
+ */
+function blank_theme_form_alter(array &$form, FormStateInterface $form_state, $form_id): void {
+  // Form id-nya per produk: commerce_order_item_add_to_cart_form_commerce_product_1.
+  if (!str_starts_with($form_id, 'commerce_order_item_add_to_cart_form')) {
+    return;
+  }
+
+  if (isset($form['actions']['submit']['#value'])) {
+    $form['actions']['submit']['#value'] = blank_theme_setting('produk_cart_label');
+  }
+
+  // Tombol WhatsApp (link) di samping tombol keranjang.
+  $whatsapp = blank_theme_whatsapp_url();
+  $url = $whatsapp['external']
+    ? Url::fromUri($whatsapp['url'], ['attributes' => ['target' => '_blank', 'rel' => 'noopener']])
+    : Url::fromUserInput($whatsapp['url']);
+  $form['actions']['whatsapp'] = [
+    '#type' => 'link',
+    '#title' => blank_theme_setting('produk_whatsapp_label'),
+    '#url' => $url,
+    '#attributes' => ['class' => ['produk__wa']],
+    '#weight' => 10,
+  ];
+
+  // Judul fieldset atribut (mis. "Ukuran" → "Pilih Ukuran"). Struktur field
+  // widget Commerce: [field][widget][delta][...].
+  if (isset($form['purchased_entity']['widget'][0]['attributes']['attribute_ukuran']['#title'])) {
+    $form['purchased_entity']['widget'][0]['attributes']['attribute_ukuran']['#title'] = blank_theme_setting('produk_size_label');
+  }
+
+  // Field jumlah: label saja; tombol -/+ dibuat js/produk.js (markup form dari
+  // Commerce tidak menyediakan slot markup untuknya, dan #prefix difilter XSS).
+  if (isset($form['quantity']['widget'][0]['value'])) {
+    $form['quantity']['widget'][0]['value']['#title'] = blank_theme_setting('produk_quantity_label');
+  }
 }
 
 /**

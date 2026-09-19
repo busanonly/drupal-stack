@@ -1,0 +1,738 @@
+/* =====================================================================
+ *  produk.css — halaman produk (product type `produk`, view mode full)
+ *  Dipasang oleh templates/commerce-product--produk--full.html.twig
+ *  ({{ attach_library('blank_theme/produk') }}), jadi hanya diunduh di
+ *  halaman produk.
+ *
+ *  Catatan: bagian harga & stok bawaan Commerce di dalam form add-to-cart
+ *  disembunyikan (lihat blok "form Commerce" di bawah) karena theme
+ *  merender harga/stok sendiri di posisi sesuai desain; nilainya
+ *  disinkronkan js/produk.js saat ukuran diganti.
+ * ===================================================================== */
+
+/* --- variabel khusus halaman produk (disampel dari desain) --- */
+.produk {
+  --produk-bg: #fff;
+  --produk-lembut: #fdf2f4;
+  --produk-lembut-2: #fdeef2;
+  --produk-garis: #eceaf0;
+  --produk-teks: #2b2530;
+  --produk-redup: #7a7280;
+  --produk-pink: #e55374;
+  --produk-pink-gelap: #c93d5c;
+  --produk-radius: 16px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space) calc(var(--space) * 2);
+  color: var(--produk-teks);
+}
+
+/* --- breadcrumb --- */
+.produk__crumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0 1rem;
+  font-size: 0.8rem;
+  color: var(--produk-redup);
+}
+
+.produk__crumb a {
+  color: var(--produk-redup);
+  text-decoration: none;
+}
+
+.produk__crumb a:hover {
+  color: var(--produk-pink);
+}
+
+.produk__crumb-current {
+  color: var(--produk-teks);
+  font-weight: 600;
+}
+
+/* --- grid atas: galeri + info --- */
+.produk__atas {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+}
+
+/* --- galeri --- */
+.produk__galeri {
+  position: relative;
+  padding: 0.75rem;
+  background: var(--produk-lembut);
+  border-radius: var(--produk-radius);
+}
+
+.produk__galeri-utama {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f7e8ec;
+  aspect-ratio: 1 / 1;
+}
+
+.produk__foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.produk__galeri-kosong {
+  color: var(--produk-redup);
+  font-size: 0.9rem;
+}
+
+.produk__badge {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  z-index: 2;
+  margin: 0;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #f0a04b, var(--produk-pink));
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.produk__badge > div,
+.produk__badge .field__item,
+.produk__badge .field__label {
+  margin: 0;
+}
+
+.produk__wish {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid #f3cdd6;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--produk-pink);
+  cursor: pointer;
+}
+
+.produk__wish:hover {
+  background: var(--produk-pink);
+  color: #fff;
+}
+
+.produk__thumbs {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.produk__thumb {
+  flex: 0 0 auto;
+  width: 4.25rem;
+  height: 4.25rem;
+  padding: 2px;
+  border: 1px solid var(--produk-garis);
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.produk__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+
+/* --- kolom info --- */
+.produk__judul {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+  line-height: 1.25;
+}
+
+.produk__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--produk-redup);
+}
+
+.produk__bintang {
+  display: inline-flex;
+  gap: 0.1rem;
+  color: var(--produk-pink);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.produk__meta-nilai {
+  font-weight: 700;
+  color: var(--produk-teks);
+}
+
+.produk__ringkas {
+  margin: 0.75rem 0 1rem;
+  color: var(--produk-redup);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* --- harga (dirender theme, disinkronkan js/produk.js) --- */
+.produk__harga {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0 0 1.25rem;
+}
+
+.produk__harga-nilai {
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 800;
+  color: var(--produk-pink);
+}
+
+.produk__harga-coret {
+  color: var(--produk-redup);
+  font-size: 1rem;
+  text-decoration: line-through;
+}
+
+.produk__diskon {
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: var(--produk-lembut-2);
+  color: var(--produk-pink);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* =====================================================================
+ *  Form add-to-cart Commerce
+ *  Markup bawaan: fieldset atribut (radio) + kolom quantity + tombol submit.
+ *  ===================================================================== */
+
+/* Harga/stok bawaan Commerce di dalam form disembunyikan: theme merender
+   sendiri di atas (lihat .produk__harga dan .produk__stok). */
+.produk [class*="product--variation-field--"] {
+  display: none;
+}
+
+.produk__aksi form {
+  margin: 0;
+}
+
+.produk .attribute-widgets > fieldset,
+.produk .attribute-widgets .fieldset-wrapper {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.produk .attribute-widgets legend {
+  margin-bottom: 0.6rem;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.produk .attribute-widgets .form-composite > .fieldset-wrapper > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.produk .attribute-widgets .form-type-radio {
+  position: relative;
+  margin: 0;
+}
+
+.produk .attribute-widgets .form-type-radio input.form-radio {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.produk .attribute-widgets .form-type-radio label.option {
+  display: block;
+  padding: 0.5rem 1.15rem;
+  border: 1px solid var(--produk-garis);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--produk-teks);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.produk .attribute-widgets .form-type-radio input:checked + label.option {
+  border-color: var(--produk-pink);
+  background: var(--produk-lembut-2);
+  color: var(--produk-pink);
+}
+
+.produk .attribute-widgets .form-type-radio input:focus-visible + label.option {
+  outline: 2px solid var(--produk-pink);
+  outline-offset: 2px;
+}
+
+/* --- jumlah (dengan tombol - / + dari blank_theme_form_alter) --- */
+.produk .field--name-quantity {
+  margin: 1rem 0 0;
+}
+
+.produk .field--name-quantity .form-item {
+  display: grid;
+  grid-template-columns: auto 6.5rem auto;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.produk .field--name-quantity label {
+  grid-column: 1 / -1;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.produk .field--name-quantity input.form-number {
+  width: 100%;
+  height: 2.6rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--produk-garis);
+  border-radius: 10px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.produk .produk__step {
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  border: 1px solid var(--produk-garis);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--produk-pink);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.produk .produk__step:hover {
+  background: var(--produk-lembut-2);
+}
+
+/* --- tombol keranjang + WhatsApp --- */
+/* Selector memakai class (bukan id): setelah AJAX rebuild, id form Drupal
+   berubah menjadi edit-actions--2, edit-submit--2, dst. */
+.produk .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+
+.produk .form-actions input.form-submit {
+  flex: 1 1 13rem;
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #ef6d8b, var(--produk-pink));
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.produk .form-actions input.form-submit:hover {
+  background: linear-gradient(135deg, var(--produk-pink), var(--produk-pink-gelap));
+}
+
+.produk .produk__wa {
+  display: inline-flex;
+  flex: 1 1 11rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0 1.25rem;
+  border: 1px solid #f3cdd6;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  color: var(--produk-pink);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.produk .produk__wa:hover {
+  background: var(--produk-lembut-2);
+}
+
+/* --- stok --- */
+/* inline-block (bukan inline-flex): flex membuang spasi antara label dan angka. */
+.produk__stok {
+  display: inline-block;
+  margin: 0.85rem 0 0;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: var(--produk-lembut-2);
+  color: var(--produk-pink);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* --- 4 keunggulan di bawah tombol --- */
+.produk__fitur {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 1.5rem 0 0;
+  padding: 1.1rem 0 0;
+  border-top: 1px solid var(--produk-garis);
+  list-style: none;
+}
+
+.produk__fitur-item {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.produk__fitur-ikon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--produk-lembut-2);
+  color: var(--produk-pink);
+  font-size: 0.85rem;
+}
+
+.produk__fitur-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+
+/* =====================================================================
+ *  Tab: deskripsi / spesifikasi / ulasan
+ *  Tanpa JS semua panel tampil (atribut hidden diatur js/produk.js),
+ *  sehingga isi tetap terbaca bila JavaScript mati.
+ * ===================================================================== */
+.produk__tabs {
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+.produk__tablist {
+  display: flex;
+  gap: 1.75rem;
+  border-bottom: 1px solid var(--produk-garis);
+}
+
+.produk__tab {
+  padding: 0.75rem 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--produk-redup);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.produk__tab.is-aktif,
+.produk__tab[aria-selected="true"] {
+  border-bottom-color: var(--produk-pink);
+  color: var(--produk-pink);
+}
+
+.produk__panel {
+  padding: clamp(1.25rem, 2.5vw, 2rem) 0 0;
+}
+
+.produk__panel[hidden] {
+  display: none;
+}
+
+.produk__panel--deskripsi {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: start;
+}
+
+.produk__deskripsi {
+  color: var(--produk-redup);
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.produk__poin {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.produk__poin li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.produk__cek {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.15rem;
+  border-radius: 50%;
+  background: var(--produk-lembut-2);
+  color: var(--produk-pink);
+}
+
+/* --- kotak "menerima custom" --- */
+.produk__custom {
+  margin-top: 1.75rem;
+  padding: 1.1rem 1.25rem;
+  border-left: 3px solid var(--produk-pink);
+  border-radius: 0 12px 12px 0;
+  background: var(--produk-lembut);
+}
+
+.produk__custom-judul {
+  margin: 0 0 0.35rem;
+  color: var(--produk-pink);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.produk__custom-teks {
+  margin: 0;
+  color: var(--produk-redup);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.produk__custom-tombol {
+  display: inline-flex;
+  margin-top: 0.85rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-pill);
+  background: var(--produk-pink);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* --- sidebar: kartu grosir + tabel spesifikasi --- */
+.produk__sidebar {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.produk__grosir {
+  padding: 1.5rem 1.25rem;
+  border-radius: var(--produk-radius);
+  background: var(--produk-lembut-2);
+  text-align: center;
+}
+
+.produk__grosir-ikon {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--produk-pink);
+}
+
+.produk__grosir-judul {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.produk__grosir-teks {
+  margin: 0 0 1rem;
+  color: var(--produk-redup);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.produk__grosir-tombol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, #ef6d8b, var(--produk-pink));
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.produk__spesifikasi {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.produk__spesifikasi th,
+.produk__spesifikasi td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--produk-garis);
+  text-align: left;
+  vertical-align: top;
+}
+
+.produk__spesifikasi th {
+  width: 42%;
+  color: var(--produk-redup);
+  font-weight: 400;
+}
+
+.produk__spesifikasi td {
+  font-weight: 600;
+}
+
+.produk__spesifikasi tr:nth-child(even) th,
+.produk__spesifikasi tr:nth-child(even) td {
+  background: #fbfafc;
+}
+
+.produk__spesifikasi--penuh {
+  max-width: 760px;
+}
+
+/* --- ulasan --- */
+.produk__ulasan {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.produk__ulasan-ringkas {
+  padding: 1.25rem;
+  border-radius: var(--produk-radius);
+  background: var(--produk-lembut);
+  text-align: center;
+}
+
+.produk__ulasan-nilai {
+  margin: 0;
+  color: var(--produk-pink);
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.produk__ulasan-jumlah {
+  margin: 0.35rem 0 0;
+  color: var(--produk-redup);
+  font-size: 0.8rem;
+}
+
+.produk__ulasan-daftar {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.produk__ulasan-item {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--produk-garis);
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+.produk__kosong {
+  color: var(--produk-redup);
+  font-size: 0.9rem;
+}
+
+/* --- responsif --- */
+@media (max-width: 1024px) {
+  .produk__atas,
+  .produk__panel--deskripsi,
+  .produk__ulasan {
+    grid-template-columns: 1fr;
+  }
+
+  .produk__fitur {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .produk__fitur {
+    grid-template-columns: 1fr;
+  }
+
+  .produk__tablist {
+    gap: 1rem;
+    overflow-x: auto;
+  }
+
+  .produk__galeri {
+    padding: 0.5rem;
+  }
+
+  .produk__thumb {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .produk .form-actions input.form-submit,
+  .produk .produk__wa {
+    flex-basis: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .produk * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+

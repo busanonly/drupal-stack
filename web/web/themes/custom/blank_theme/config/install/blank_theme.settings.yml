@@ -59,3 +59,37 @@ hero_badge: |
 # Kosong = pakai gambar bawaan theme (images/hero-boneka.webp).
 hero_image: ''
 
+# --- Halaman produk (templates/commerce-product--produk--full.html.twig) ---
+produk_crumb_home: 'Beranda'
+produk_crumb_catalog: 'Produk'
+produk_crumb_catalog_url: '/produk'
+produk_size_label: 'Pilih Ukuran'
+produk_quantity_label: 'Jumlah'
+produk_stock_label: 'Stok tersedia'
+produk_stock_unit: 'pcs'
+produk_discount_label: 'Hemat'
+produk_sold_label: 'Terjual'
+produk_review_label: 'ulasan'
+produk_cart_label: 'Tambah ke Keranjang'
+produk_whatsapp_label: 'Konsultasi via WhatsApp'
+produk_wish_label: 'Simpan ke wishlist'
+produk_tab_description: 'Deskripsi Produk'
+produk_tab_specification: 'Spesifikasi'
+produk_tab_review: 'Ulasan'
+
+# Satu keunggulan per baris: "Label|Subteks|ikon" (ikon bebas).
+produk_features: |
+  Produk Berkualitas|Bahan aman & lembut|✓
+  Harga Grosir|Lebih hemat|Rp
+  Pengiriman Cepat|Seluruh Indonesia|✈
+  Siap Melayani|Konsultasi gratis|☎
+
+produk_grosir_title: 'Butuh Penawaran Harga Grosir?'
+produk_grosir_text: 'Dapatkan harga khusus untuk pembelian dalam jumlah besar.'
+produk_grosir_label: 'Hubungi Kami via WhatsApp'
+produk_custom_title: 'Menerima Custom Boneka'
+produk_custom_text: 'Bisa tambah logo, bordir nama, ganti pakaian, dan lain-lain. Konsultasikan kebutuhan Anda sekarang.'
+produk_custom_label: 'Konsultasi'
+produk_empty_review: 'Belum ada ulasan untuk produk ini.'
+produk_empty_specification: 'Spesifikasi produk belum diisi.'
+

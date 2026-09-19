@@ -34,3 +34,18 @@ hero:
       css/hero.css: {}
   dependencies:
     - blank_theme/base
+
+# Halaman produk (templates/commerce-product--produk--full.html.twig →
+# css/produk.css + js/produk.js). Dipasang dari template (bukan global) agar
+# hanya diunduh di halaman produk. drupalSettings dipakai js/produk.js untuk
+# data harga/stok tiap variasi.
+produk:
+  version: 1.x
+  css:
+    theme:
+      css/produk.css: {}
+  js:
+    js/produk.js: { attributes: { defer: true } }
+  dependencies:
+    - blank_theme/base
+    - core/drupalSettings

@@ -86,6 +86,32 @@ h3 {
   padding: var(--space) 0;
 }
 
+/* Breadcrumb bawaan Drupal (blok Breadcrumb): baris link, bukan daftar bernomor. */
+.site-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+  list-style: none;
+}
+
+.site-breadcrumb li + li::before {
+  content: '›';
+  margin-right: 0.35rem;
+}
+
+.site-breadcrumb a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.site-breadcrumb a:hover {
+  color: var(--color-accent);
+}
+
 /* Header situs (bar atas) punya file sendiri: css/header.css. */
 .site-footer {
   border-top: 1px solid var(--color-border);

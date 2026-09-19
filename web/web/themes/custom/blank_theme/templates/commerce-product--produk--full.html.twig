@@ -1,0 +1,258 @@
+{#
+/**
+ * @file
+ * Halaman produk (product type `produk`, view mode `full`).
+ *
+ * Dipakai oleh templates/commerce-product--produk--full.html.twig pada theme
+ * blank_theme. Semua teks bisa diubah dari Appearance > Settings (bagian
+ * "Halaman produk"); data produk sendiri diambil dari field Commerce.
+ *
+ * Variabel:
+ * - product/content/attributes: standar Commerce (content.variations = form
+ *   "Tambah ke Keranjang" + tombol WhatsApp dari blank_theme_form_alter()).
+ * - blank_produk: data siap pakai (lihat blank_theme_produk() di
+ *   blank_theme.theme): galeri, harga, stok, spesifikasi, ulasan, fitur, dst.
+ */
+#}
+{{ attach_library('blank_theme/produk') }}
+{% set p = blank_produk %}
+<article{{ attributes.addClass('produk') }}>
+
+  <nav class="produk__crumb" aria-label="{{ 'Breadcrumb'|t }}">
+    <a href="{{ path('<front>') }}">{{ p.crumb_home }}</a>
+    <span class="produk__crumb-sep" aria-hidden="true">›</span>
+    <a href="{{ p.crumb_catalog_url }}">{{ p.crumb_catalog }}</a>
+    <span class="produk__crumb-sep" aria-hidden="true">›</span>
+    <span class="produk__crumb-current" aria-current="page">{{ product_entity.label }}</span>
+  </nav>
+
+  <div class="produk__atas">
+    {# --- Galeri foto --- #}
+    <div class="produk__galeri" data-produk-galeri>
+      {% if content.field_badge|render|trim is not empty %}
+        <div class="produk__badge">{{ content.field_badge }}</div>
+      {% endif %}
+      <button class="produk__wish" type="button" aria-label="{{ p.wish_label }}">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 20s-7-4.5-7-9.5A3.9 3.9 0 0 1 12 7a3.9 3.9 0 0 1 7 3.5C19 15.5 12 20 12 20Z" />
+        </svg>
+      </button>
+
+      {% if p.galeri is not empty %}
+        <div class="produk__galeri-utama">
+          {% for gambar in p.galeri %}
+            <img class="produk__foto{{ loop.first ? ' is-aktif' }}" src="{{ gambar.url }}" alt="{{ gambar.alt }}"
+              width="{{ gambar.width }}" height="{{ gambar.height }}" {% if not loop.first %}hidden{% endif %}
+              data-produk-foto="{{ loop.index0 }}" />
+          {% endfor %}
+        </div>
+        {% if p.galeri|length > 1 %}
+          <div class="produk__thumbs">
+            {% for gambar in p.galeri %}
+              <button type="button" class="produk__thumb{{ loop.first ? ' is-aktif' }}"
+                data-produk-thumb="{{ loop.index0 }}" aria-label="{{ 'Tampilkan foto @nomor'|t({'@nomor': loop.index}) }}">
+                <img src="{{ gambar.thumb }}" alt="" width="80" height="80" loading="lazy" />
+              </button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% else %}
+        <div class="produk__galeri-utama produk__galeri-kosong">
+          <span>{{ 'Foto produk belum diisi.'|t }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    {# --- Info & pembelian --- #}
+    <div class="produk__info">
+      <h1 class="produk__judul">{{ product_entity.label }}</h1>
+
+      <div class="produk__meta">
+        {% if p.rating %}
+          <span class="produk__bintang" role="img" aria-label="{{ 'Rating @nilai dari 5'|t({'@nilai': p.rating}) }}">
+            {% for i in 1..5 %}<span aria-hidden="true">{{ i <= p.rating_bulat ? '★' : '☆' }}</span>{% endfor %}
+          </span>
+          <span class="produk__meta-nilai">{{ p.rating }}</span>
+        {% endif %}
+        {% if p.ulasan_jumlah %}
+          <span class="produk__meta-ulasan">({{ p.ulasan_jumlah }} {{ p.ulasan_label }})</span>
+        {% endif %}
+        {% if p.terjual %}
+          <span class="produk__meta-sep" aria-hidden="true">|</span>
+          <span class="produk__meta-terjual">{{ p.terjual_label }} {{ p.terjual_format }}</span>
+        {% endif %}
+      </div>
+
+      {% if p.ringkasan %}
+        <p class="produk__ringkas">{{ p.ringkasan }}</p>
+      {% endif %}
+
+      <p class="produk__harga" data-produk-harga>
+        <span class="produk__harga-nilai" data-produk-harga-nilai>{{ p.harga }}</span>
+        {% if p.harga_coret %}
+          <span class="produk__harga-coret" data-produk-harga-coret>{{ p.harga_coret }}</span>
+        {% endif %}
+        {% if p.diskon %}
+          <span class="produk__diskon" data-produk-diskon>{{ p.diskon_label }} {{ p.diskon }}%</span>
+        {% endif %}
+      </p>
+
+      <div class="produk__aksi">
+        {{ content.variations }}
+      </div>
+
+      <p class="produk__stok">
+        {{ p.stok_label }}: <strong data-produk-stok>{{ p.stok }}</strong>
+      </p>
+
+      {% if p.fitur is not empty %}
+        <ul class="produk__fitur">
+          {% for fitur in p.fitur %}
+            <li class="produk__fitur-item">
+              <span class="produk__fitur-ikon" aria-hidden="true">{{ fitur.ikon }}</span>
+              <span class="produk__fitur-teks">
+                <span class="produk__fitur-label">{{ fitur.label }}</span>
+                {% if fitur.sub %}<span class="produk__fitur-sub">{{ fitur.sub }}</span>{% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+
+  {# --- Tab: deskripsi / spesifikasi / ulasan --- #}
+  <div class="produk__tabs" data-produk-tabs>
+    <div class="produk__tablist" role="tablist">
+      <button type="button" class="produk__tab is-aktif" role="tab" id="produk-tab-deskripsi"
+        aria-controls="produk-panel-deskripsi" aria-selected="true" data-produk-tab="deskripsi">
+        {{ p.tab_deskripsi }}
+      </button>
+      <button type="button" class="produk__tab" role="tab" id="produk-tab-spesifikasi"
+        aria-controls="produk-panel-spesifikasi" aria-selected="false" data-produk-tab="spesifikasi">
+        {{ p.tab_spesifikasi }}
+      </button>
+      <button type="button" class="produk__tab" role="tab" id="produk-tab-ulasan"
+        aria-controls="produk-panel-ulasan" aria-selected="false" data-produk-tab="ulasan">
+        {{ p.tab_ulasan }}{% if p.ulasan_jumlah %} ({{ p.ulasan_jumlah }}){% endif %}
+      </button>
+    </div>
+
+    <div class="produk__panel produk__panel--deskripsi" id="produk-panel-deskripsi" role="tabpanel"
+      aria-labelledby="produk-tab-deskripsi" data-produk-panel="deskripsi">
+      <div class="produk__kolom">
+        <div class="produk__deskripsi">{{ content.body }}</div>
+
+        {% if p.keunggulan is not empty %}
+          <ul class="produk__poin">
+            {% for poin in p.keunggulan %}
+              <li>
+                <span class="produk__cek" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7" /></svg>
+                </span>
+                {{ poin }}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        {% if p.custom_text %}
+          <div class="produk__custom">
+            <p class="produk__custom-judul">{{ p.custom_title }}</p>
+            <p class="produk__custom-teks">{{ p.custom_text }}</p>
+            {% if p.wa_url %}
+              <a class="produk__custom-tombol" href="{{ p.wa_url }}" rel="noopener" target="_blank">
+                {{ p.custom_label }}
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <aside class="produk__sidebar">
+        {% if p.grosir_text %}
+          <div class="produk__grosir">
+            <span class="produk__grosir-ikon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+                <ellipse cx="7" cy="8" rx="2.6" ry="3.2" />
+                <ellipse cx="12" cy="6" rx="2.6" ry="3.4" />
+                <ellipse cx="17" cy="8" rx="2.6" ry="3.2" />
+                <path d="M12 11c3.6 0 6.5 2.4 6.5 5.2S15.6 21 12 21s-6.5-2-6.5-4.8S8.4 11 12 11Z" />
+              </svg>
+            </span>
+            <p class="produk__grosir-judul">{{ p.grosir_title }}</p>
+            <p class="produk__grosir-teks">{{ p.grosir_text }}</p>
+            {% if p.wa_url %}
+              <a class="produk__grosir-tombol" href="{{ p.wa_url }}" rel="noopener" target="_blank">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.1 14.2c-.2.6-1.2 1.2-1.7 1.2-.5.1-1 .1-1.7-.1a12 12 0 0 1-5.6-4.7c-.4-.7-.6-1.4-.5-2 0-.6.4-1.3.9-1.6.2-.1.6-.2.8 0l.9 1.6c.1.2 0 .4-.1.6l-.4.5c-.1.2-.2.4 0 .6.5.8 1.4 1.7 2.3 2.1.2.1.4.1.6-.1l.5-.6c.2-.2.4-.2.6-.1l1.6.8c.2.1.3.4.2.7Z" />
+                </svg>
+                {{ p.grosir_label }}
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if p.spesifikasi is not empty %}
+          <table class="produk__spesifikasi">
+            <caption class="visually-hidden">{{ 'Spesifikasi produk'|t }}</caption>
+            <tbody>
+              {% for baris in p.spesifikasi %}
+                <tr>
+                  <th scope="row">{{ baris.label }}</th>
+                  <td>{{ baris.nilai }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+      </aside>
+    </div>
+
+    <div class="produk__panel" id="produk-panel-spesifikasi" role="tabpanel"
+      aria-labelledby="produk-tab-spesifikasi" data-produk-panel="spesifikasi" hidden>
+      {% if p.spesifikasi is not empty %}
+        <table class="produk__spesifikasi produk__spesifikasi--penuh">
+          <caption class="visually-hidden">{{ 'Spesifikasi produk'|t }}</caption>
+          <tbody>
+            {% for baris in p.spesifikasi %}
+              <tr>
+                <th scope="row">{{ baris.label }}</th>
+                <td>{{ baris.nilai }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="produk__kosong">{{ p.spesifikasi_kosong }}</p>
+      {% endif %}
+    </div>
+
+    <div class="produk__panel" id="produk-panel-ulasan" role="tabpanel"
+      aria-labelledby="produk-tab-ulasan" data-produk-panel="ulasan" hidden>
+      <div class="produk__ulasan">
+        <div class="produk__ulasan-ringkas">
+          <p class="produk__ulasan-nilai">{{ p.rating ?: '-' }}</p>
+          {% if p.rating %}
+            <p class="produk__bintang" aria-hidden="true">
+              {% for i in 1..5 %}<span>{{ i <= p.rating_bulat ? '★' : '☆' }}</span>{% endfor %}
+            </p>
+          {% endif %}
+          <p class="produk__ulasan-jumlah">{{ p.ulasan_jumlah }} {{ p.ulasan_label }}</p>
+        </div>
+        {% if p.ulasan is not empty %}
+          <ul class="produk__ulasan-daftar">
+            {% for ulasan in p.ulasan %}
+              <li class="produk__ulasan-item">{{ ulasan }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="produk__kosong">{{ p.ulasan_kosong }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</article>
+
