@@ -1,0 +1,14 @@
+{
+    "name": "busanonly/commerce_midtrans",
+    "description": "Drupal 11 + Commerce: payment gateway Midtrans Snap (popup snap.js atau redirect) dengan webhook notifikasi (verifikasi signature SHA512), void, dan refund. Kredensial dibaca dari environment (.env).",
+    "type": "drupal-custom-module",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://github.com/busanonly/commerce_midtrans",
+    "support": {
+        "issues": "https://github.com/busanonly/commerce_midtrans/issues",
+        "source": "https://github.com/busanonly/commerce_midtrans"
+    },
+    "require": {
+        "drupal/commerce": "^3.3"
+    }
+}

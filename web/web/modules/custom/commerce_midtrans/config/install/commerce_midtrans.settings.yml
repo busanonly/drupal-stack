@@ -1,0 +1,12 @@
+default_mode: 'sandbox'
+api_base_url_sandbox: 'https://api.sandbox.midtrans.com'
+api_base_url_production: 'https://api.midtrans.com'
+snap_base_url_sandbox: 'https://app.sandbox.midtrans.com/snap/v1'
+snap_base_url_production: 'https://app.midtrans.com/snap/v1'
+snap_js_url_sandbox: 'https://app.sandbox.midtrans.com/snap/snap.js'
+snap_js_url_production: 'https://app.midtrans.com/snap/snap.js'
+server_key: ''
+client_key: ''
+is_3ds: true
+timeout: 20
+log_requests: false

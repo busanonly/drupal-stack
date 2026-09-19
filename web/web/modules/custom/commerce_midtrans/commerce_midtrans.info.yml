@@ -1,0 +1,10 @@
+name: 'Commerce Midtrans (Snap)'
+type: module
+description: 'Payment gateway Midtrans Snap untuk Drupal Commerce (endpoint <code>app.midtrans.com/snap/v1</code>, Core API <code>api.midtrans.com</code>). Kredensial dibaca dari <code>.env</code>.'
+package: Commerce (custom)
+core_version_requirement: ^11
+configure: commerce_midtrans.settings
+dependencies:
+  - commerce:commerce
+  - commerce:commerce_payment
+  - commerce:commerce_checkout

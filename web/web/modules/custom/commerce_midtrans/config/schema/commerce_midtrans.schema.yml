@@ -1,0 +1,66 @@
+commerce_midtrans.settings:
+  type: config_object
+  label: 'Commerce Midtrans settings'
+  mapping:
+    default_mode:
+      type: string
+      label: 'Mode default (sandbox/production)'
+    api_base_url_sandbox:
+      type: string
+      label: 'Core API base URL (sandbox)'
+    api_base_url_production:
+      type: string
+      label: 'Core API base URL (production)'
+    snap_base_url_sandbox:
+      type: string
+      label: 'Snap API base URL (sandbox)'
+    snap_base_url_production:
+      type: string
+      label: 'Snap API base URL (production)'
+    snap_js_url_sandbox:
+      type: string
+      label: 'Snap.js URL (sandbox)'
+    snap_js_url_production:
+      type: string
+      label: 'Snap.js URL (production)'
+    server_key:
+      type: string
+      label: 'Server key (fallback bila env MIDTRANS_SERVER_KEY kosong)'
+    client_key:
+      type: string
+      label: 'Client key (fallback bila env MIDTRANS_CLIENT_KEY kosong)'
+    is_3ds:
+      type: boolean
+      label: 'Aktifkan 3D Secure'
+    timeout:
+      type: integer
+      label: 'Timeout request (detik)'
+    log_requests:
+      type: boolean
+      label: 'Catat setiap request ke log'
+
+commerce_payment.commerce_payment_gateway.plugin.midtrans_snap:
+  type: commerce_payment_gateway_configuration
+  label: 'Midtrans (Snap)'
+  mapping:
+    ui_mode:
+      type: string
+      label: 'Mode tampilan Snap (popup/redirect)'
+    order_id_prefix:
+      type: string
+      label: 'Prefix order ID Midtrans'
+    enabled_payments:
+      type: string
+      label: 'Channel pembayaran (koma, opsional)'
+    expiry_duration:
+      type: integer
+      label: 'Masa berlaku pembayaran (jam)'
+    send_item_details:
+      type: boolean
+      label: 'Kirim detail item'
+    token_ttl:
+      type: integer
+      label: 'Gunakan ulang token Snap selama (menit)'
+    auto_open:
+      type: boolean
+      label: 'Buka popup Snap otomatis'

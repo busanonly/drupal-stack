@@ -1,0 +1,6 @@
+commerce_midtrans.settings:
+  title: 'Midtrans (Snap)'
+  description: 'Konfigurasi API Midtrans Snap (server/client key, mode, URL sandbox/production).'
+  parent: commerce.configuration
+  route_name: commerce_midtrans.settings
+  weight: 21

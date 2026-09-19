@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Gaya untuk area pembayaran Midtrans Snap.
+ */
+
+.commerce-midtrans-snap .commerce-midtrans-status {
+  margin-top: 0.75em;
+  padding: 0.5em 0.75em;
+  border-left: 4px solid #b00020;
+  background: #fdf2f2;
+}
+
+.commerce-midtrans-snap .commerce-midtrans-reference {
+  display: block;
+  margin-top: 0.5em;
+  color: #555;
+}
+
+.commerce-midtrans-snap [data-commerce-midtrans-pay] {
+  margin-top: 0.5em;
+}

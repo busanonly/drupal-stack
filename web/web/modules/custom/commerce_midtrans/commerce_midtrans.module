@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Commerce Midtrans (Snap) — hook modul.
+ */
+
+/**
+ * Implements hook_install().
+ *
+ * Router dibangun ulang setelah instalasi agar route milik modul ini
+ * (commerce_midtrans.settings) langsung tersedia di tabel router. Tanpa ini,
+ * pada sebagian lingkungan (mis. instalasi lewat drush) pemrosesan
+ * commerce_midtrans.links.menu.yml dapat gagal dengan pesan
+ * "Route commerce_midtrans.settings does not exist" karena tabel router masih
+ * berisi hasil build sebelum modul ini aktif.
+ */
+function commerce_midtrans_install(): void {
+  \Drupal::service('router.builder')->rebuild();
+}

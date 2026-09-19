@@ -1,0 +1,4 @@
+administer commerce_midtrans:
+  title: 'Administer Midtrans (Snap) settings'
+  description: 'Mengubah base URL, kredensial fallback, 3DS, dan timeout integrasi Midtrans.'
+  restrict access: true

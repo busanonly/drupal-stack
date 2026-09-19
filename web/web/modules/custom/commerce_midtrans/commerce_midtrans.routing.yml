@@ -1,0 +1,7 @@
+commerce_midtrans.settings:
+  path: '/admin/commerce/config/midtrans'
+  defaults:
+    _form: '\Drupal\commerce_midtrans\Form\SettingsForm'
+    _title: 'Midtrans (Snap)'
+  requirements:
+    _permission: 'administer commerce_midtrans'

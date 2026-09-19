@@ -1,0 +1,11 @@
+snap_popup:
+  version: 1.x
+  css:
+    component:
+      css/commerce_midtrans.css: {}
+  js:
+    js/commerce_midtrans.snap.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/once

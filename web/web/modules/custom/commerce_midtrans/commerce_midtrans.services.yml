@@ -1,0 +1,13 @@
+services:
+
+  logger.channel.commerce_midtrans:
+    parent: logger.channel_base
+    arguments: ['commerce_midtrans']
+
+  # Client Midtrans Snap API + Core API (status/cancel/refund).
+  commerce_midtrans.api_client:
+    class: Drupal\commerce_midtrans\MidtransApiClient
+    arguments:
+      - '@http_client'
+      - '@config.factory'
+      - '@logger.channel.commerce_midtrans'
